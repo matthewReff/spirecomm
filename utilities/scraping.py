@@ -10,20 +10,23 @@ from spirecomm.spire.character import Intent, Monster, PlayerClass
 from spirecomm.spire.screen import RestOption
 from spirecomm.communication.action import *
 
+def load_data_from_file(file_name):
+    try:
+        with open(file_name, 'r') as json_file:
+            jsonData = json.load(json_file)
+            logging.debug(f"Loaded {len(jsonData)} items from {file_name}")
+
+            return jsonData
+    except Exception as e:
+      logging.error("Unable to load", file_name, str(e))
+
 class GameDataManager():
     file_name = ""
     data = dict()
 
     def __init__(self, file_name):
         self.file_name = file_name
-        self.load()
-
-    def load(self):
-        try:
-            with open(self.file_name, 'r') as json_file:
-                self.data = json.load(json_file)
-        except Exception as e:
-            logging.error("Unable to load", self.file_name, str(e))
+        self.data = load_data_from_file(file_name)
 
     def save(self):
         try:
@@ -51,7 +54,7 @@ class Scraper():
     root_folder_path = ""
     card_data_manager = None
     relic_data_manager = None
-    potion_data_mananger = None
+    potion_data_manager = None
     monster_data_manager = None
     event_data_manager = None
     CARD_FILE_NAME = "cards.json"
