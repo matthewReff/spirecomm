@@ -1,4 +1,3 @@
-
 from spirecomm.spire.game import Game
 from spirecomm.communication.action import *
 from neuralNet.dataConverter import *

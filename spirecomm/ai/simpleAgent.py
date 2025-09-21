@@ -1,4 +1,3 @@
-
 from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
