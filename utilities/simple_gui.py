@@ -14,9 +14,8 @@ from kivy.core.window import Window
 
 
 class Base(BoxLayout):
-
     def __init__(self, coordinator):
-        super().__init__(orientation='vertical')
+        super().__init__(orientation="vertical")
         self.coordinator = coordinator
 
         self.input_text = TextInput(size_hint=(1, 10))
@@ -30,7 +29,7 @@ class Base(BoxLayout):
         self.output_text = TextInput(size_hint=(1, 1))
         self.add_widget(self.output_text)
 
-        self.button = Button(text='Send', size_hint=(1, 1))
+        self.button = Button(text="Send", size_hint=(1, 1))
         self.button.bind(on_press=self.send_output)
         self.add_widget(self.button)
 
@@ -49,7 +48,7 @@ class Base(BoxLayout):
         if text is None:
             text = self.output_text.text
         text = text.strip()
-        print(text, end='\n', flush=True)
+        print(text, end="\n", flush=True)
         self.history_lines.append(text)
         self.history_text.text = "\n".join(self.history_lines)
         self.output_text.text = ""
@@ -60,7 +59,6 @@ class Base(BoxLayout):
 
 
 class CommunicationApp(App):
-
     def __init__(self, coordinator):
         super().__init__()
         self.coordinator = coordinator

@@ -6,21 +6,22 @@ from spirecomm.spire.game import Game
 from spirecomm.spire.relic import Relic
 from spirecomm.spire.potion import Potion
 from spirecomm.spire.card import Card
-from spirecomm.spire.character import Intent, Monster, PlayerClass
-from spirecomm.spire.screen import RestOption
+from spirecomm.spire.character import Monster, PlayerClass
 from spirecomm.communication.action import *
+
 
 def load_data_from_file(file_name):
     try:
-        with open(file_name, 'r') as json_file:
+        with open(file_name, "r") as json_file:
             jsonData = json.load(json_file)
             logging.debug(f"Loaded {len(jsonData)} items from {file_name}")
 
             return jsonData
     except Exception as e:
-      logging.error("Unable to load", file_name, str(e))
+        logging.error("Unable to load", file_name, str(e))
 
-class GameDataManager():
+
+class GameDataManager:
     file_name = ""
     data = dict()
 
@@ -30,7 +31,7 @@ class GameDataManager():
 
     def save(self):
         try:
-            with open(self.file_name, 'w') as json_file:
+            with open(self.file_name, "w") as json_file:
                 json.dump(self.data, json_file)
         except Exception as e:
             logging.error("Unable to save", self.file_name, str(e))
@@ -38,7 +39,7 @@ class GameDataManager():
     def convert(self, key):
         try:
             return self.data[key]
-        except Exception as e:
+        except Exception:
             logging.error("No entry found for", key)
 
     def attempt_update(self, key):
@@ -50,7 +51,8 @@ class GameDataManager():
         except Exception as e:
             logging.error("Unable to update", str(e))
 
-class Scraper():
+
+class Scraper:
     root_folder_path = ""
     card_data_manager = None
     relic_data_manager = None
@@ -77,19 +79,19 @@ class Scraper():
         except FileExistsError:
             # Completely fine, that's what we wanted
             pass
-        except Exception as e:
+        except Exception:
             logging.error("Unable to create folder: " + folder_path)
 
     def __create_file(self, file_path: str):
         try:
             os.mknod(file_path)
             # Fill with empty dict to make things happy
-            with open(file_path, 'w') as json_file:
+            with open(file_path, "w") as json_file:
                 json.dump(dict(), json_file)
         except FileExistsError:
             # Completely fine, that's what we wanted
             pass
-        except Exception as e:
+        except Exception:
             logging.error("Unable to create file: " + file_path)
 
     def __initialize_objects(self, root_folder_path: str, class_to_load: PlayerClass):
@@ -133,7 +135,12 @@ class Scraper():
     def __scrape_for_cards(self, gameState: Game):
         logging.debug("Scraping card data")
         try:
-            for cardCollection in [gameState.draw_pile, gameState.discard_pile, gameState.exhaust_pile, gameState.hand]:
+            for cardCollection in [
+                gameState.draw_pile,
+                gameState.discard_pile,
+                gameState.exhaust_pile,
+                gameState.hand,
+            ]:
                 card: Card
                 for card in cardCollection:
                     self.card_data_manager.attempt_update(card.card_id)
@@ -157,7 +164,6 @@ class Scraper():
                 self.relic_data_manager.attempt_update(relic.relic_id)
         except Exception as e:
             logging.error("Ran into error while scraping for relics:" + str(e))
-
 
     def __scrape_for_potions(self, gameState: Game):
         logging.debug("Scraping potion data")

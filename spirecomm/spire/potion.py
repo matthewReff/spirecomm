@@ -1,5 +1,4 @@
 class Potion:
-
     def __init__(self, potion_id, name, can_use, can_discard, requires_target, price=0):
         self.potion_id = potion_id
         self.name = name
@@ -19,5 +18,5 @@ class Potion:
             can_use=json_object.get("can_use", False),
             can_discard=json_object.get("can_discard", False),
             requires_target=json_object.get("requires_target", False),
-            price=json_object.get("price", 0)
+            price=json_object.get("price", 0),
         )

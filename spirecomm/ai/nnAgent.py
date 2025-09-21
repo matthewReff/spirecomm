@@ -1,18 +1,11 @@
-import time
-import random
-import logging
 
-from spirecomm.spire.game import Game
-from spirecomm.spire.relic import Relic
-from spirecomm.spire.potion import Potion
-from spirecomm.spire.card import Card
-from spirecomm.spire.character import Intent, Monster, PlayerClass
-from spirecomm.spire.screen import RestOption
+from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 from neuralNet.interactor import NeuralNetInteractor
 from utilities.scraping import Scraper
+
 
 class NnAgent(Agent):
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
@@ -27,7 +20,7 @@ class NnAgent(Agent):
     def get_next_combat_action(self):
         self.scraper.scrape_state(self.game)
         return super().get_next_combat_action()
-        #return self.interactor.run_combat(self.game)
+        # return self.interactor.run_combat(self.game)
 
     def get_card_reward_action(self):
         self.scraper.scrape_state(self.game)

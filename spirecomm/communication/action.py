@@ -32,7 +32,9 @@ class Action:
 class PlayCardAction(Action):
     """An action to play a specified card from your hand"""
 
-    def __init__(self, card=None, card_index=-1, target_monster=None, target_index=None):
+    def __init__(
+        self, card=None, card_index=-1, target_monster=None, target_index=None
+    ):
         super().__init__("play")
         self.card = card
         self.card_index = card_index
@@ -50,13 +52,17 @@ class PlayCardAction(Action):
         if self.target_index is None:
             coordinator.send_message("{} {}".format(self.command, hand_card_index))
         else:
-            coordinator.send_message("{} {} {}".format(self.command, hand_card_index, self.target_index))
+            coordinator.send_message(
+                "{} {} {}".format(self.command, hand_card_index, self.target_index)
+            )
 
 
 class PotionAction(Action):
     """An action to use or discard a selected potion"""
 
-    def __init__(self, use, potion=None, potion_index=-1, target_monster=None, target_index=None):
+    def __init__(
+        self, use, potion=None, potion_index=-1, target_monster=None, target_index=None
+    ):
         super().__init__("potion")
         self.use = use
         self.potion = potion
@@ -199,7 +205,9 @@ class CardRewardAction(ChooseAction):
         elif card is not None:
             name = card.name
         else:
-            raise Exception("Must provide a card for CardRewardAction if not choosing the Singing Bowl")
+            raise Exception(
+                "Must provide a card for CardRewardAction if not choosing the Singing Bowl"
+            )
         super().__init__(name=name)
 
 
@@ -212,11 +220,18 @@ class CombatRewardAction(ChooseAction):
 
     def execute(self, coordinator):
         if coordinator.last_game_state.screen_type != ScreenType.COMBAT_REWARD:
-            raise Exception("CombatRewardAction is only available on a Combat Reward Screen.")
+            raise Exception(
+                "CombatRewardAction is only available on a Combat Reward Screen."
+            )
         reward_list = coordinator.last_game_state.screen.rewards
         if self.combat_reward not in reward_list:
-            raise Exception("Reward is not available: {}".format(self.combat_reward.reward_type))
-        if self.combat_reward.reward_type == RewardType.POTION and coordinator.last_game_state.are_potions_full():
+            raise Exception(
+                "Reward is not available: {}".format(self.combat_reward.reward_type)
+            )
+        if (
+            self.combat_reward.reward_type == RewardType.POTION
+            and coordinator.last_game_state.are_potions_full()
+        ):
             raise Exception("Cannot choose potion reward with full potion slots.")
         self.choice_index = reward_list.index(self.combat_reward)
         super().execute(coordinator)
@@ -239,7 +254,10 @@ class OptionalCardSelectConfirmAction(Action):
         screen_type = coordinator.last_game_state.screen_type
         if screen_type == ScreenType.HAND_SELECT:
             coordinator.add_action_to_queue(ProceedAction())
-        elif screen_type == ScreenType.GRID and coordinator.last_game_state.screen.confirm_up:
+        elif (
+            screen_type == ScreenType.GRID
+            and coordinator.last_game_state.screen.confirm_up
+        ):
             coordinator.add_action_to_queue(ProceedAction())
         else:
             coordinator.add_action_to_queue(StateAction())
@@ -256,18 +274,36 @@ class CardSelectAction(Action):
         screen_type = coordinator.last_game_state.screen_type
         screen = coordinator.last_game_state.screen
         if screen_type not in [ScreenType.HAND_SELECT, ScreenType.GRID]:
-            raise Exception("CardSelectAction is only available on a Hand Select or Grid Select Screen.")
+            raise Exception(
+                "CardSelectAction is only available on a Hand Select or Grid Select Screen."
+            )
         num_selected_cards = len(screen.selected_cards)
         num_remaining_cards = screen.num_cards - num_selected_cards
         available_cards = screen.cards
-        if screen_type == ScreenType.GRID and not screen.any_number and len(self.cards) != num_remaining_cards:
-            raise Exception("Wrong number of cards selected for CardSelectAction (provided {}, need {})".format(len(self.cards), num_remaining_cards))
+        if (
+            screen_type == ScreenType.GRID
+            and not screen.any_number
+            and len(self.cards) != num_remaining_cards
+        ):
+            raise Exception(
+                "Wrong number of cards selected for CardSelectAction (provided {}, need {})".format(
+                    len(self.cards), num_remaining_cards
+                )
+            )
         elif len(self.cards) > num_remaining_cards:
-            raise Exception("Too many cards selected for CardSelectAction (provided {}, max {})".format(len(self.cards), num_remaining_cards))
+            raise Exception(
+                "Too many cards selected for CardSelectAction (provided {}, max {})".format(
+                    len(self.cards), num_remaining_cards
+                )
+            )
         chosen_indices = []
         for card in self.cards:
             if card not in available_cards:
-                raise Exception("Card {} is not available in the Hand Select Screen".format(card.name))
+                raise Exception(
+                    "Card {} is not available in the Hand Select Screen".format(
+                        card.name
+                    )
+                )
             else:
                 chosen_indices.append(available_cards.index(card))
         chosen_indices.sort(reverse=True)
@@ -329,4 +365,3 @@ class StateAction(Action):
 
     def __init__(self, requires_game_ready=False):
         super().__init__(command="state", requires_game_ready=False)
-

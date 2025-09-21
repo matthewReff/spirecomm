@@ -2,8 +2,9 @@ import spirecomm.spire.card
 
 
 class Power:
-
-    def __init__(self, power_id, name, amount, damage=0, misc=0, just_applied=False, card=None):
+    def __init__(
+        self, power_id, name, amount, damage=0, misc=0, just_applied=False, card=None
+    ):
         self.power_id = power_id
         self.power_name = name
         self.amount = amount

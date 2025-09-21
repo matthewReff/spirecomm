@@ -51,7 +51,6 @@ class RestOption(Enum):
 
 
 class EventOption:
-
     def __init__(self, text, label, disabled=False, choice_index=None):
         self.text = text
         self.label = label
@@ -68,7 +67,6 @@ class EventOption:
 
 
 class Screen:
-
     SCREEN_TYPE = ScreenType.NONE
 
     def __init__(self):
@@ -80,7 +78,6 @@ class Screen:
 
 
 class ChestScreen(Screen):
-
     SCREEN_TYPE = ScreenType.CHEST
 
     def __init__(self, chest_type, chest_open):
@@ -106,7 +103,6 @@ class ChestScreen(Screen):
 
 
 class EventScreen(Screen):
-
     SCREEN_TYPE = ScreenType.EVENT
 
     def __init__(self, name, event_id, body_text=""):
@@ -118,19 +114,19 @@ class EventScreen(Screen):
 
     @classmethod
     def from_json(cls, json_object):
-        event = cls(json_object["event_name"], json_object["event_id"], json_object["body_text"])
+        event = cls(
+            json_object["event_name"], json_object["event_id"], json_object["body_text"]
+        )
         for json_option in json_object["options"]:
             event.options.append(EventOption.from_json(json_option))
         return event
 
 
 class ShopRoomScreen(Screen):
-
     SCREEN_TYPE = ScreenType.SHOP_ROOM
 
 
 class RestScreen(Screen):
-
     SCREEN_TYPE = ScreenType.REST
 
     def __init__(self, has_rested, rest_options):
@@ -140,12 +136,13 @@ class RestScreen(Screen):
 
     @classmethod
     def from_json(cls, json_object):
-        rest_options = [RestOption[option.upper()] for option in json_object.get("rest_options")]
+        rest_options = [
+            RestOption[option.upper()] for option in json_object.get("rest_options")
+        ]
         return cls(json_object.get("has_rested"), rest_options)
 
 
 class CardRewardScreen(Screen):
-
     SCREEN_TYPE = ScreenType.CARD_REWARD
 
     def __init__(self, cards, can_bowl, can_skip):
@@ -163,7 +160,6 @@ class CardRewardScreen(Screen):
 
 
 class CombatReward:
-
     def __init__(self, reward_type, gold=0, relic=None, potion=None, link=None):
         self.reward_type = reward_type
         self.gold = gold
@@ -172,12 +168,16 @@ class CombatReward:
         self.link = link
 
     def __eq__(self, other):
-        return self.reward_type == other.reward_type and self.gold == other.gold \
-               and self.relic == other.relic and self.potion == other.potion and self.link == other.link
+        return (
+            self.reward_type == other.reward_type
+            and self.gold == other.gold
+            and self.relic == other.relic
+            and self.potion == other.potion
+            and self.link == other.link
+        )
 
 
 class CombatRewardScreen(Screen):
-
     SCREEN_TYPE = ScreenType.COMBAT_REWARD
 
     def __init__(self, rewards):
@@ -192,18 +192,29 @@ class CombatRewardScreen(Screen):
             if reward_type in [RewardType.GOLD, RewardType.STOLEN_GOLD]:
                 rewards.append(CombatReward(reward_type, gold=json_reward.get("gold")))
             elif reward_type == RewardType.RELIC:
-                rewards.append(CombatReward(reward_type, relic=Relic.from_json(json_reward.get("relic"))))
+                rewards.append(
+                    CombatReward(
+                        reward_type, relic=Relic.from_json(json_reward.get("relic"))
+                    )
+                )
             elif reward_type == RewardType.POTION:
-                rewards.append(CombatReward(reward_type, potion=Potion.from_json(json_reward.get("potion"))))
+                rewards.append(
+                    CombatReward(
+                        reward_type, potion=Potion.from_json(json_reward.get("potion"))
+                    )
+                )
             elif reward_type == RewardType.SAPPHIRE_KEY:
-                rewards.append(CombatReward(reward_type, link=Relic.from_json(json_reward.get("link"))))
+                rewards.append(
+                    CombatReward(
+                        reward_type, link=Relic.from_json(json_reward.get("link"))
+                    )
+                )
             else:
                 rewards.append(CombatReward(reward_type))
         return cls(rewards)
 
 
 class MapScreen(Screen):
-
     SCREEN_TYPE = ScreenType.MAP
 
     def __init__(self, current_node, next_nodes, boss_available):
@@ -229,7 +240,6 @@ class MapScreen(Screen):
 
 
 class BossRewardScreen(Screen):
-
     SCREEN_TYPE = ScreenType.BOSS_REWARD
 
     def __init__(self, relics):
@@ -243,7 +253,6 @@ class BossRewardScreen(Screen):
 
 
 class ShopScreen(Screen):
-
     SCREEN_TYPE = ScreenType.SHOP_SCREEN
 
     def __init__(self, cards, relics, potions, purge_available, purge_cost):
@@ -265,10 +274,19 @@ class ShopScreen(Screen):
 
 
 class GridSelectScreen(Screen):
-
     SCREEN_TYPE = ScreenType.GRID
 
-    def __init__(self, cards, selected_cards, num_cards, any_number, confirm_up, for_upgrade, for_transform, for_purge):
+    def __init__(
+        self,
+        cards,
+        selected_cards,
+        num_cards,
+        any_number,
+        confirm_up,
+        for_upgrade,
+        for_transform,
+        for_purge,
+    ):
         super().__init__()
         self.cards = cards
         self.selected_cards = selected_cards
@@ -282,18 +300,28 @@ class GridSelectScreen(Screen):
     @classmethod
     def from_json(cls, json_object):
         cards = [Card.from_json(card) for card in json_object.get("cards")]
-        selected_cards = [Card.from_json(card) for card in json_object.get("selected_cards")]
+        selected_cards = [
+            Card.from_json(card) for card in json_object.get("selected_cards")
+        ]
         num_cards = json_object.get("num_cards")
         any_number = json_object.get("any_number", False)
         confirm_up = json_object.get("confirm_up")
         for_upgrade = json_object.get("for_upgrade")
         for_transform = json_object.get("for_transform")
         for_purge = json_object.get("for_purge")
-        return cls(cards, selected_cards, num_cards, any_number, confirm_up, for_upgrade, for_transform, for_purge)
+        return cls(
+            cards,
+            selected_cards,
+            num_cards,
+            any_number,
+            confirm_up,
+            for_upgrade,
+            for_transform,
+            for_purge,
+        )
 
 
 class HandSelectScreen(Screen):
-
     SCREEN_TYPE = ScreenType.HAND_SELECT
 
     def __init__(self, cards, selected, num_cards, can_pick_zero):
@@ -313,7 +341,6 @@ class HandSelectScreen(Screen):
 
 
 class GameOverScreen(Screen):
-
     SCREEN_TYPE = ScreenType.GAME_OVER
 
     def __init__(self, score, victory):
@@ -327,7 +354,6 @@ class GameOverScreen(Screen):
 
 
 class CompleteScreen(Screen):
-
     SCREEN_TYPE = ScreenType.COMPLETE
 
 
@@ -345,7 +371,7 @@ SCREEN_CLASSES = {
     ScreenType.HAND_SELECT: HandSelectScreen,
     ScreenType.GAME_OVER: GameOverScreen,
     ScreenType.COMPLETE: CompleteScreen,
-    ScreenType.NONE: Screen
+    ScreenType.NONE: Screen,
 }
 
 

@@ -3,11 +3,10 @@ import queue
 import threading
 import json
 import collections
-import os
 
 from spirecomm.spire.game import Game
 from spirecomm.spire.screen import ScreenType
-from spirecomm.communication.action import Action, StartGameAction
+from spirecomm.communication.action import StartGameAction
 
 
 def read_stdin(input_queue):
@@ -21,7 +20,7 @@ def read_stdin(input_queue):
         stdin_input = ""
         while True:
             input_char = sys.stdin.read(1)
-            if input_char == '\n':
+            if input_char == "\n":
                 break
             else:
                 stdin_input += input_char
@@ -37,7 +36,7 @@ def write_stdout(output_queue):
     """
     while True:
         output = output_queue.get()
-        print(output, end='\n', flush=True)
+        print(output, end="\n", flush=True)
 
 
 class Coordinator:
@@ -46,8 +45,12 @@ class Coordinator:
     def __init__(self):
         self.input_queue = queue.Queue()
         self.output_queue = queue.Queue()
-        self.input_thread = threading.Thread(target=read_stdin, args=(self.input_queue,))
-        self.output_thread = threading.Thread(target=write_stdout, args=(self.output_queue,))
+        self.input_thread = threading.Thread(
+            target=read_stdin, args=(self.input_queue,)
+        )
+        self.output_thread = threading.Thread(
+            target=write_stdout, args=(self.output_queue,)
+        )
         self.input_thread.daemon = True
         self.input_thread.start()
         self.output_thread.daemon = True
@@ -167,7 +170,10 @@ class Coordinator:
             if self.last_error is None:
                 self.in_game = communication_state.get("in_game")
                 if self.in_game:
-                    self.last_game_state = Game.from_json(communication_state.get("game_state"), communication_state.get("available_commands"))
+                    self.last_game_state = Game.from_json(
+                        communication_state.get("game_state"),
+                        communication_state.get("available_commands"),
+                    )
             if perform_callbacks:
                 if self.last_error is not None:
                     self.action_queue.clear()
@@ -222,12 +228,12 @@ class Coordinator:
 
     def climb_till_defeat(self, player_class, seed):
         """
-            :param player_class: the class to play
-            :type player_class: PlayerClass
-            :param seed: the alphanumeric seed to use
-            :type seed: str
-            :return: List of telemetry about games
-            :rtype: List
+        :param player_class: the class to play
+        :type player_class: PlayerClass
+        :param seed: the alphanumeric seed to use
+        :type seed: str
+        :return: List of telemetry about games
+        :rtype: List
         """
         ascension_level = 0
         while True:
@@ -240,5 +246,3 @@ class Coordinator:
                 ascension_level += 1
             else:
                 return victory_list
-
-

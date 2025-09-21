@@ -1,7 +1,7 @@
 import math
 
-class Priority:
 
+class Priority:
     CARD_PRIORITY_LIST = []
 
     PLAY_PRIORITY_LIST = []
@@ -14,11 +14,11 @@ class Priority:
 
     BOSS_RELIC_PRIORITY_LIST = []
 
-    MAP_NODE_PRIORITIES_1 = {'R': 1000, 'E': 10, '$': 100, '?': 100, 'M': 1, 'T': 0}
+    MAP_NODE_PRIORITIES_1 = {"R": 1000, "E": 10, "$": 100, "?": 100, "M": 1, "T": 0}
 
-    MAP_NODE_PRIORITIES_2 = {'R': 1000, 'E': 100, '$': 10, '?': 10, 'M': 1, 'T': 0}
+    MAP_NODE_PRIORITIES_2 = {"R": 1000, "E": 100, "$": 10, "?": 10, "M": 1, "T": 0}
 
-    MAP_NODE_PRIORITIES_3 = {'R': 1000, 'E': 1, '$': 100, '?': 100, 'M': 10, 'T': 0}
+    MAP_NODE_PRIORITIES_3 = {"R": 1000, "E": 1, "$": 100, "?": 100, "M": 10, "T": 0}
 
     GOOD_CARD_ACTIONS = [
         "PutOnDeckAction",
@@ -26,7 +26,7 @@ class Priority:
         "DualWieldAction",
         "NightmareAction",
         "RetainCardsAction",
-        "SetupAction"
+        "SetupAction",
     ]
 
     BAD_CARD_ACTIONS = [
@@ -35,46 +35,83 @@ class Priority:
         "PutOnBottomOfDeckAction",
         "RecycleAction",
         "ForethoughtAction",
-        "GamblingChipAction"
+        "GamblingChipAction",
     ]
 
     def __init__(self):
-        self.CARD_PRIORITIES = {self.CARD_PRIORITY_LIST[i]: i for i in range(len(self.CARD_PRIORITY_LIST))}
-        self.PLAY_PRIORITIES = {self.PLAY_PRIORITY_LIST[i]: i for i in range(len(self.PLAY_PRIORITY_LIST))}
-        self.BOSS_RELIC_PRIORITIES = {self.BOSS_RELIC_PRIORITY_LIST[i]: i for i in range(len(self.BOSS_RELIC_PRIORITY_LIST))}
+        self.CARD_PRIORITIES = {
+            self.CARD_PRIORITY_LIST[i]: i for i in range(len(self.CARD_PRIORITY_LIST))
+        }
+        self.PLAY_PRIORITIES = {
+            self.PLAY_PRIORITY_LIST[i]: i for i in range(len(self.PLAY_PRIORITY_LIST))
+        }
+        self.BOSS_RELIC_PRIORITIES = {
+            self.BOSS_RELIC_PRIORITY_LIST[i]: i
+            for i in range(len(self.BOSS_RELIC_PRIORITY_LIST))
+        }
         self.MAP_NODE_PRIORITIES = {
             1: self.MAP_NODE_PRIORITIES_1,
             2: self.MAP_NODE_PRIORITIES_2,
             3: self.MAP_NODE_PRIORITIES_3,
-            4: self.MAP_NODE_PRIORITIES_3  # Doesn't really matter anyway
+            4: self.MAP_NODE_PRIORITIES_3,  # Doesn't really matter anyway
         }
 
     def get_best_card(self, card_list):
-        return min(card_list, key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades)
+        return min(
+            card_list,
+            key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf)
+            - 0.5 * x.upgrades,
+        )
 
     def get_worst_card(self, card_list):
-        return max(card_list, key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades)
+        return max(
+            card_list,
+            key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf)
+            - 0.5 * x.upgrades,
+        )
 
     def get_sorted_cards(self, card_list, reverse=False):
-        return sorted(card_list, key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades, reverse=reverse)
+        return sorted(
+            card_list,
+            key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf)
+            - 0.5 * x.upgrades,
+            reverse=reverse,
+        )
 
     def get_sorted_cards_to_play(self, card_list, reverse=False):
-        return sorted(card_list, key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades, reverse=reverse)
+        return sorted(
+            card_list,
+            key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf)
+            - 0.5 * x.upgrades,
+            reverse=reverse,
+        )
 
     def get_best_card_to_play(self, card_list):
-        return min(card_list, key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades)
+        return min(
+            card_list,
+            key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf)
+            - 0.5 * x.upgrades,
+        )
 
     def get_worst_card_to_play(self, card_list):
-        return max(card_list, key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades)
+        return max(
+            card_list,
+            key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf)
+            - 0.5 * x.upgrades,
+        )
 
     def should_skip(self, card):
-        return self.CARD_PRIORITIES.get(card.card_id, math.inf) > self.CARD_PRIORITIES.get("Skip")
+        return self.CARD_PRIORITIES.get(
+            card.card_id, math.inf
+        ) > self.CARD_PRIORITIES.get("Skip")
 
     def needs_more_copies(self, card, num_copies):
         return self.MAX_COPIES.get(card.card_id, 0) > num_copies
 
     def get_best_boss_relic(self, relic_list):
-        return min(relic_list, key=lambda x: self.BOSS_RELIC_PRIORITIES.get(x.relic_id, 0))
+        return min(
+            relic_list, key=lambda x: self.BOSS_RELIC_PRIORITIES.get(x.relic_id, 0)
+        )
 
     def is_card_aoe(self, card):
         return card.card_id in self.AOE_CARDS
@@ -92,7 +129,6 @@ class Priority:
 
 
 class SilentPriority(Priority):
-
     CARD_PRIORITY_LIST = [
         "Footwork",
         "After Image",
@@ -244,7 +280,7 @@ class SilentPriority(Priority):
         "Dark Shackles",
         "PanicButton",
         "Finesse",
-        "Good Instincts"
+        "Good Instincts",
     ]
 
     PLAY_PRIORITY_LIST = [
@@ -381,15 +417,9 @@ class SilentPriority(Priority):
         "Pain",
         "Normality",
         "Pride",
-
     ]
 
-    AOE_CARDS = [
-        "Dagger Spray",
-        "Die Die Die",
-        "Crippling Poison",
-        "All Out Attack"
-    ]
+    AOE_CARDS = ["Dagger Spray", "Die Die Die", "Crippling Poison", "All Out Attack"]
 
     MAX_COPIES = {
         "Corpse Explosion": 1,
@@ -456,7 +486,6 @@ class SilentPriority(Priority):
 
 
 class IroncladPriority(Priority):
-
     CARD_PRIORITY_LIST = [
         "Apotheosis",
         "Ghostly",
@@ -591,7 +620,7 @@ class IroncladPriority(Priority):
         "Necronomicurse",
         "Pain",
         "Normality",
-        "Pride"
+        "Pride",
     ]
 
     DEFENSIVE_CARDS = [
@@ -607,7 +636,7 @@ class IroncladPriority(Priority):
         "Ghostly Armor",
         "Dark Shackles",
         "PanicButton",
-        "Rage"
+        "Rage",
     ]
 
     PLAY_PRIORITY_LIST = [
@@ -744,15 +773,10 @@ class IroncladPriority(Priority):
         "Necronomicurse",
         "Pain",
         "Normality",
-        "Pride"
+        "Pride",
     ]
 
-    AOE_CARDS = [
-        "Cleave",
-        "Immolate",
-        "Thunderclap",
-        "Whirlwind"
-    ]
+    AOE_CARDS = ["Cleave", "Immolate", "Thunderclap", "Whirlwind"]
 
     MAX_COPIES = {
         "Offering": 2,
@@ -812,7 +836,6 @@ class IroncladPriority(Priority):
 
 
 class DefectPowerPriority(Priority):
-
     CARD_PRIORITY_LIST = [
         "Echo Form",
         "Electrodynamics",
@@ -987,12 +1010,10 @@ class DefectPowerPriority(Priority):
         "RitualDagger": 1,
         "Panache": 1,
         "Master of Strategy": 5,
-        "Steam": 2
+        "Steam": 2,
     }
 
-    AOE_CARDS = [
-        "Electrodynamics"
-    ]
+    AOE_CARDS = ["Electrodynamics"]
 
     DEFENSIVE_CARDS = [
         "Genetic Algorithm",
@@ -1179,8 +1200,8 @@ class DefectPowerPriority(Priority):
         "Normality",
     ]
 
-    MAP_NODE_PRIORITIES_1 = {'R': 1000, 'E': 100, '$': 10, '?': 10, 'M': 1, 'T': 0}
+    MAP_NODE_PRIORITIES_1 = {"R": 1000, "E": 100, "$": 10, "?": 10, "M": 1, "T": 0}
 
-    MAP_NODE_PRIORITIES_2 = {'R': 100, 'E': -1000, '$': 10, '?': 10, 'M': 1, 'T': 0}
+    MAP_NODE_PRIORITIES_2 = {"R": 100, "E": -1000, "$": 10, "?": 10, "M": 1, "T": 0}
 
-    MAP_NODE_PRIORITIES_3 = {'R': 1000, 'E': 10, '$': 100, '?': 100, 'M': 1, 'T': 0}
+    MAP_NODE_PRIORITIES_3 = {"R": 1000, "E": 10, "$": 100, "?": 100, "M": 1, "T": 0}

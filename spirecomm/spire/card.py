@@ -19,7 +19,21 @@ class CardRarity(Enum):
 
 
 class Card:
-    def __init__(self, card_id, name, card_type, rarity, upgrades=0, has_target=False, cost=0, uuid="", misc=0, price=0, is_playable=False, exhausts=False):
+    def __init__(
+        self,
+        card_id,
+        name,
+        card_type,
+        rarity,
+        upgrades=0,
+        has_target=False,
+        cost=0,
+        uuid="",
+        misc=0,
+        price=0,
+        is_playable=False,
+        exhausts=False,
+    ):
         self.card_id = card_id
         self.name = name
         self.type = card_type
@@ -47,7 +61,7 @@ class Card:
             misc=json_object.get("misc", 0),
             price=json_object.get("price", 0),
             is_playable=json_object.get("is_playable", False),
-            exhausts=json_object.get("exhausts", False)
+            exhausts=json_object.get("exhausts", False),
         )
 
     def __eq__(self, other):

@@ -1,17 +1,11 @@
-import logging
-import time
-import random
 
-from spirecomm.spire.game import Game
-from spirecomm.spire.character import Intent, PlayerClass
-import spirecomm.spire.card
-from spirecomm.spire.screen import RestOption
+from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 
-class SimpleAgent(Agent):
 
+class SimpleAgent(Agent):
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
         super().__init__(chosen_class)
 

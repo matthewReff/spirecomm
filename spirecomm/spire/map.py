@@ -1,5 +1,4 @@
 class Node:
-
     def __init__(self, x, y, symbol):
         self.x = x
         self.y = y
@@ -8,7 +7,9 @@ class Node:
 
     @classmethod
     def from_json(cls, json_object):
-        return cls(json_object.get("x"), json_object.get("y"), json_object.get("symbol"))
+        return cls(
+            json_object.get("x"), json_object.get("y"), json_object.get("symbol")
+        )
 
     def __repr__(self):
         return "({},{})".format(self.x, self.y)
@@ -18,7 +19,6 @@ class Node:
 
 
 class Map:
-
     def __init__(self):
         self.nodes = {}
 
@@ -45,7 +45,9 @@ class Map:
             children = json_node.get("children")
             parent_node = dungeon_map.get_node(json_node.get("x"), json_node.get("y"))
             for json_child in children:
-                child_node = dungeon_map.get_node(json_child.get("x"), json_child.get("y"))
+                child_node = dungeon_map.get_node(
+                    json_child.get("x"), json_child.get("y")
+                )
                 if child_node is not None:
                     parent_node.children.append(child_node)
 
