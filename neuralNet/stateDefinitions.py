@@ -1,4 +1,4 @@
-from gymnasium.spaces import Dict, Sequence, Discrete, Text
+from gymnasium.spaces import Dict, Sequence, Discrete, Text, OneOf
 import string
 
 """
@@ -32,11 +32,16 @@ EnemySpace = Dict(
     }
 )
 
-ActionSpace = Dict(
-    {
-        "hand_cards": Sequence(CardSpace),
-        "potions": Sequence(PotionSpace),
-    }
+"""
+0 - Self (Includes things with no target)
+1-N - Enemy
+"""
+TargetSpace = Discrete(10)
+ActionSpace = OneOf(
+    Dict(
+        {"target": TargetSpace, "card": CardSpace},
+        Dict({"potion": PotionSpace, "target": TargetSpace}),
+    )
 )
 
 StateSpace = Dict(

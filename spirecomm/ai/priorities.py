@@ -59,45 +59,51 @@ class Priority:
     def get_best_card(self, card_list):
         return min(
             card_list,
-            key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf)
-            - 0.5 * x.upgrades,
+            key=lambda x: (
+                self.CARD_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades
+            ),
         )
 
     def get_worst_card(self, card_list):
         return max(
             card_list,
-            key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf)
-            - 0.5 * x.upgrades,
+            key=lambda x: (
+                self.CARD_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades
+            ),
         )
 
     def get_sorted_cards(self, card_list, reverse=False):
         return sorted(
             card_list,
-            key=lambda x: self.CARD_PRIORITIES.get(x.card_id, math.inf)
-            - 0.5 * x.upgrades,
+            key=lambda x: (
+                self.CARD_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades
+            ),
             reverse=reverse,
         )
 
     def get_sorted_cards_to_play(self, card_list, reverse=False):
         return sorted(
             card_list,
-            key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf)
-            - 0.5 * x.upgrades,
+            key=lambda x: (
+                self.PLAY_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades
+            ),
             reverse=reverse,
         )
 
     def get_best_card_to_play(self, card_list):
         return min(
             card_list,
-            key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf)
-            - 0.5 * x.upgrades,
+            key=lambda x: (
+                self.PLAY_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades
+            ),
         )
 
     def get_worst_card_to_play(self, card_list):
         return max(
             card_list,
-            key=lambda x: self.PLAY_PRIORITIES.get(x.card_id, math.inf)
-            - 0.5 * x.upgrades,
+            key=lambda x: (
+                self.PLAY_PRIORITIES.get(x.card_id, math.inf) - 0.5 * x.upgrades
+            ),
         )
 
     def should_skip(self, card):
