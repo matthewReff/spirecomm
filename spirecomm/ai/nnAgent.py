@@ -2,13 +2,17 @@ from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
+from Mods.spirecomm.neuralNet.agent import SlayAiAgent
+from Mods.spirecomm.neuralNet.environment import SlayAiEnvironment
 from neuralNet.interactor import NeuralNetInteractor
 from utilities.scraping import Scraper
 
 
 class NnAgent(Agent):
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
-        self.interactor = NeuralNetInteractor()
+        slay_ai_agent = SlayAiAgent()
+        slay_ai_environment = SlayAiEnvironment()
+        self.interactor = NeuralNetInteractor(slay_ai_agent, slay_ai_environment)
         self.scraper = Scraper(chosen_class)
         super().__init__(chosen_class)
 
