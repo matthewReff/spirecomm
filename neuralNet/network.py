@@ -1,27 +1,23 @@
 import torch
 import numpy as np
 from torch import nn
+from tensordict.nn import TensorDictSequential, TensorDictModule
+
+from Mods.spirecomm.neuralNet.stateDefinitions import ActionSpaceKeys, StateSpaceKeys
 
 # https://docs.pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 
 
-class SlayAiNet(nn.Module):
+class SlayAiNet(nn.TensorDictModule):
     """mini CNN structure
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
     """
 
-    def __init__(self, input_dim, output_dim):
+    def __init__(self):
         super().__init__()
-        c, h, w = input_dim
+        self.online = self.__build_nn()
 
-        if h != 84:
-            raise ValueError(f"Expecting input height: 84, got: {h}")
-        if w != 84:
-            raise ValueError(f"Expecting input width: 84, got: {w}")
-
-        self.online = self.__build_cnn(c, output_dim)
-
-        self.target = self.__build_cnn(c, output_dim)
+        self.target = self.__build_nn()
         self.target.load_state_dict(self.online.state_dict())
 
         # Q_target parameters are frozen.
@@ -38,18 +34,18 @@ class SlayAiNet(nn.Module):
         elif model == "target":
             return self.target(input)
 
-    def __build_cnn(self, c, output_dim):
-        return nn.Sequential(
-            nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
+    def __build_nn(self):
+        return TensorDictSequential(
+            TensorDictModule(nn.Transformer(128), in_keys=StateSpaceKeys, out_keys=["out"]),
             nn.ReLU(),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
+            nn.Conv1d(in_channels=32, out_channels=64, kernel_size=4),
             nn.ReLU(),
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+            nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3),
             nn.ReLU(),
             nn.Flatten(),
             nn.Linear(3136, 512),
             nn.ReLU(),
-            nn.Linear(512, output_dim),
+            TensorDictModule(nn.Transformer(512), in_keys=["out"], out_keys=[ActionSpaceKeys]),
         )
 
     def td_estimate(self, state, action):

@@ -10,7 +10,9 @@ from utilities.scraping import Scraper
 
 class NnAgent(Agent):
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
-        slay_ai_agent = SlayAiAgent()
+        self.state_dim = (1, 1)
+        self.action_dim = (1, 3)
+        slay_ai_agent = SlayAiAgent(self.state_dim, self.action_dim)
         slay_ai_environment = SlayAiEnvironment()
         self.interactor = NeuralNetInteractor(slay_ai_agent, slay_ai_environment)
         self.scraper = Scraper(chosen_class)

@@ -6,10 +6,10 @@ from torchrl.data import TensorDictReplayBuffer, LazyMemmapStorage
 
 
 class SlayAiAgent:
-    def __init__(self):
+    def __init__(self, state_dim, action_dim):
         # Generic Setup
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.net = SlayAiNet().float()
+        self.net = SlayAiNet(state_dim, action_dim).float()
         self.net = self.net.to(device=self.device)
 
         # Exploration params
