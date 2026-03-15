@@ -1,7 +1,7 @@
 from Mods.spirecomm.spirecomm.spire.card import Card
 from Mods.spirecomm.spirecomm.spire.potion import Potion
 from Mods.spirecomm.spirecomm.spire.character import Monster, Player, Orb
-from Mods.spirecomm.spirecomm.spire.power import Power #Artifact
+from Mods.spirecomm.spirecomm.spire.power import Power
 from Mods.spirecomm.spirecomm.spire.relic import Relic
 from spirecomm.spire.game import Game
 from spirecomm.communication.action import *
@@ -11,23 +11,24 @@ from tensordict import TensorDict
 def serialize_cards(cards: list[Card]):
     serialized_cards = []
     for i, card in enumerate(cards):
-        serialized_cards.append({
-            "name": card.name,
-            "cost": card.cost,
-            "index": i,
-            "upgraded": card.upgrades
-        })
+        serialized_cards.append(
+            {
+                "name": card.name,
+                "cost": card.cost,
+                "index": i,
+                "upgraded": card.upgrades,
+            }
+        )
     return serialized_cards
 
 
 def serialize_potion(potion: Potion):
     return potion.name
 
+
 def serialize_buff(power: Power):
-    return {
-        "name": power.power_name,
-        "amount": power.amount
-    }
+    return {"name": power.power_name, "amount": power.amount}
+
 
 def serialize_enemy(monster: Monster):
     estimated_damage = monster.move_hits * monster.move_adjusted_damage
@@ -38,14 +39,17 @@ def serialize_enemy(monster: Monster):
         "block": monster.block,
         "intent": monster.monster_index,
         "expected_damage": estimated_damage,
-        "buffs": map(serialize_buff, monster.powers)
+        "buffs": map(serialize_buff, monster.powers),
     }
+
 
 def serialize_orb(orb: Orb):
     return orb.name
 
+
 def serialize_relic(relic: Relic):
     return relic.name
+
 
 # Translate game state to NN readable format
 def game_state_to_NN_input(gameState: Game) -> TensorDict:
@@ -86,6 +90,6 @@ def NN_output_to_action(networkOutput: TensorDict) -> Action:
     # Potion
     elif type == 2:
         return PotionAction(potion_index=using_index, target_index=target_index)
-    
+
     # Todo flag this as an "invalid state" and punish
     return EndTurnAction()

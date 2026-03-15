@@ -36,7 +36,9 @@ class SlayAiNet(nn.TensorDictModule):
 
     def __build_nn(self):
         return TensorDictSequential(
-            TensorDictModule(nn.Transformer(128), in_keys=StateSpaceKeys, out_keys=["out"]),
+            TensorDictModule(
+                nn.Transformer(128), in_keys=StateSpaceKeys, out_keys=["out"]
+            ),
             nn.ReLU(),
             nn.Conv1d(in_channels=32, out_channels=64, kernel_size=4),
             nn.ReLU(),
@@ -45,7 +47,9 @@ class SlayAiNet(nn.TensorDictModule):
             nn.Flatten(),
             nn.Linear(3136, 512),
             nn.ReLU(),
-            TensorDictModule(nn.Transformer(512), in_keys=["out"], out_keys=[ActionSpaceKeys]),
+            TensorDictModule(
+                nn.Transformer(512), in_keys=["out"], out_keys=[ActionSpaceKeys]
+            ),
         )
 
     def td_estimate(self, state, action):

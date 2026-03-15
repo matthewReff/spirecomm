@@ -1,4 +1,4 @@
-from gymnasium.spaces import Dict, Sequence, Discrete, Text, OneOf
+from gymnasium.spaces import Dict, Sequence, Discrete, Text
 import string
 
 """
@@ -18,12 +18,12 @@ TypeSpace = Discrete(3)
 """
 ActionIndexSpace = Discrete(10)
 
-ActionSpaceKeys = [ "target_index", "using_index", "type" ]
+ActionSpaceKeys = ["target_index", "using_index", "type"]
 ActionSpace = Dict(
     {
         "target_index": LocationIndexSpace,
         "type": TypeSpace,
-        "using_index": ActionIndexSpace
+        "using_index": ActionIndexSpace,
     }
 )
 
@@ -50,10 +50,10 @@ RelicSpace = Text(min_length=1, max_length=100, charset=string.ascii_letters)
 BuffSpace = Dict(
     {
         "name": Text(min_length=1, max_length=100, charset=string.ascii_letters),
-        "amount": Text(min_length=1, max_length=2, charset=string.digits)
+        "amount": Text(min_length=1, max_length=2, charset=string.digits),
     }
 )
-    
+
 IntentSpace = Dict(
     {
         "attack": Text(min_length=1, max_length=3, charset=string.digits),
@@ -75,7 +75,21 @@ EnemySpace = Dict(
     }
 )
 
-StateSpaceKeys = [ "hand_cards", "potions", "current_orbs", "energy", "max_health", "current_health", "block", "relics", "buffs", "discarded_cards", "exhausted_cards", "remaining_deck_cards", "enemies"]
+StateSpaceKeys = [
+    "hand_cards",
+    "potions",
+    "current_orbs",
+    "energy",
+    "max_health",
+    "current_health",
+    "block",
+    "relics",
+    "buffs",
+    "discarded_cards",
+    "exhausted_cards",
+    "remaining_deck_cards",
+    "enemies",
+]
 StateSpace = Dict(
     {
         # Directly Interactive
