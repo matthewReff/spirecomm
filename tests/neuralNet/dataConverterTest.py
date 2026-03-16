@@ -6,8 +6,8 @@ from neuralNet.dataConverter import *
 class TestNeuralNetConvert(unittest.TestCase):
     def test_gameData_to_nn_input(self):
         testGameData = Game()
+        # Check that conversion doesn't throw
         convertedNNData = game_state_to_NN_input(testGameData)
-        #self.assertEqual(convertedNNData, "")
 
     @unittest.skip("Waiting for sample to test")
     def test_nn_out_to_game_action(self):

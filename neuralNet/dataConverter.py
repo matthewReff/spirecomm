@@ -5,8 +5,8 @@ from spirecomm.spire.power import Power
 from spirecomm.spire.relic import Relic
 from spirecomm.spire.game import Game
 from spirecomm.communication.action import *
-from tensordict import TensorDict, NonTensorData, NonTensorStack
-from torch import Tensor
+from tensordict import TensorDict, NonTensorStack
+
 
 def serialize_cards(cards: list[Card]) -> list[TensorDict]:
     serialized_cards = []
@@ -25,13 +25,8 @@ def serialize_cards(cards: list[Card]) -> list[TensorDict]:
 def serialize_potions(potions: list[Potion]) -> list[TensorDict]:
     serialized_potions = []
     for i, potion in enumerate(potions):
-        serialized_potions.append(
-        TensorDict({
-            "name": potion.name,
-            "index": i
-        })
-    )
-    return serialized_potions 
+        serialized_potions.append(TensorDict({"name": potion.name, "index": i}))
+    return serialized_potions
 
 
 def serialize_buff(power: Power) -> TensorDict:
@@ -40,15 +35,17 @@ def serialize_buff(power: Power) -> TensorDict:
 
 def serialize_enemy(monster: Monster) -> TensorDict:
     estimated_damage = monster.move_hits * monster.move_adjusted_damage
-    return TensorDict({
-        "name": monster.name,
-        "location_index": monster.monster_index,
-        "health": monster.current_hp,
-        "block": monster.block,
-        "intent": monster.monster_index,
-        "expected_damage": estimated_damage,
-        "buffs": map(serialize_buff, monster.powers),
-    })
+    return TensorDict(
+        {
+            "name": monster.name,
+            "location_index": monster.monster_index,
+            "health": monster.current_hp,
+            "block": monster.block,
+            "intent": monster.monster_index,
+            "expected_damage": estimated_damage,
+            "buffs": map(serialize_buff, monster.powers),
+        }
+    )
 
 
 def serialize_orb(orb: Orb) -> str:
@@ -67,8 +64,16 @@ def game_state_to_NN_input(gameState: Game) -> TensorDict:
     rawDict["potions"] = NonTensorStack(serialize_potions(gameState.potions))
 
     playerData: Player | None = gameState.player
-    rawDict["buffs"] = NonTensorStack(map(serialize_buff, playerData.powers)) if playerData  else NonTensorStack([])
-    rawDict["current_orbs"] = NonTensorStack(map(serialize_orb, playerData.orbs)) if playerData else NonTensorStack([])
+    rawDict["buffs"] = (
+        NonTensorStack(map(serialize_buff, playerData.powers))
+        if playerData
+        else NonTensorStack([])
+    )
+    rawDict["current_orbs"] = (
+        NonTensorStack(map(serialize_orb, playerData.orbs))
+        if playerData
+        else NonTensorStack([])
+    )
     rawDict["energy"] = playerData.energy if playerData else 0
     rawDict["block"] = playerData.block if playerData else 0
     rawDict["current_health"] = gameState.current_hp
@@ -77,7 +82,9 @@ def game_state_to_NN_input(gameState: Game) -> TensorDict:
     rawDict["hand_cards"] = NonTensorStack(serialize_cards(gameState.hand))
     rawDict["discarded_cards"] = NonTensorStack(serialize_cards(gameState.discard_pile))
     rawDict["exhausted_cards"] = NonTensorStack(serialize_cards(gameState.exhaust_pile))
-    rawDict["remaining_deck_cards"] = NonTensorStack(serialize_cards(gameState.draw_pile))
+    rawDict["remaining_deck_cards"] = NonTensorStack(
+        serialize_cards(gameState.draw_pile)
+    )
 
     rawDict["enemies"] = NonTensorStack(map(serialize_enemy, gameState.monsters))
 
