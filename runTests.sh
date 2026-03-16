@@ -1,1 +1,1 @@
-python -m unittest discover --pattern "*Test.py" -v
+python3 -m unittest discover --pattern "*Test.py" -v
