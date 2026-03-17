@@ -2,8 +2,8 @@ from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
-from Mods.spirecomm.neuralNet.agent import SlayAiAgent
-from Mods.spirecomm.neuralNet.environment import SlayAiEnvironment
+from neuralNet.agent import SlayAiAgent
+from neuralNet.environment import SlayAiEnvironment
 from neuralNet.interactor import NeuralNetInteractor
 from utilities.scraping import Scraper
 

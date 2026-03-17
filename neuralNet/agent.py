@@ -1,4 +1,4 @@
-from Mods.spirecomm.neuralNet.network import SlayAiNet
+from neuralNet.network import SlayAiNet
 import torch
 import numpy as np
 from tensordict import TensorDict

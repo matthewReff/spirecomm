@@ -3,12 +3,12 @@ import numpy as np
 from torch import nn
 from tensordict.nn import TensorDictSequential, TensorDictModule
 
-from Mods.spirecomm.neuralNet.stateDefinitions import ActionSpaceKeys, StateSpaceKeys
+from neuralNet.stateDefinitions import ActionSpaceKeys, StateSpaceKeys
 
 # https://docs.pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 
 
-class SlayAiNet(nn.TensorDictModule):
+class SlayAiNet(TensorDictModule):
     """mini CNN structure
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
     """

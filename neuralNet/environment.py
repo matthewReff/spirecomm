@@ -1,4 +1,4 @@
-from Mods.spirecomm.neuralNet.stateDefinitions import ActionSpace, StateSpace
+from neuralNet.stateDefinitions import ActionSpace, StateSpace
 from gymnasium import Env
 
 
