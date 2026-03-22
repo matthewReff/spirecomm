@@ -4,7 +4,7 @@ from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
 from spirecomm.spire.character import PlayerClass
 
 
-class TestScraper(unittest.TestCase):
+class TestEncoder(unittest.TestCase):
     def test_database_upsert(self):
         db = EncodingDatabase(PlayerClass.DEFECT)
         db.upsert_tables()

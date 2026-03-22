@@ -1,3 +1,4 @@
+from Mods.spirecomm.utilities.sqlite_scraping import EncodingMapper
 from spirecomm.spire.card import Card
 from spirecomm.spire.potion import Potion
 from spirecomm.spire.character import Monster, Player, Orb
@@ -13,7 +14,7 @@ from spirecomm.communication.action import (
 import torch
 
 
-def serialize_cards(cards: list[Card]) -> list[TensorDict]:
+def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> list[TensorDict]:
     serialized_cards = []
     for i, card in enumerate(cards):
         serialized_cards.append(
@@ -27,7 +28,7 @@ def serialize_cards(cards: list[Card]) -> list[TensorDict]:
     return serialized_cards
 
 
-def serialize_potions(potions: list[Potion]) -> list[TensorDict]:
+def serialize_potions(potions: list[Potion], encoding_mapper: EncodingMapper) -> list[TensorDict]:
     serialized_potions = []
     for i, potion in enumerate(potions):
         serialized_potions.append(TensorDict({"name": potion.name, "index": i}))
@@ -38,7 +39,7 @@ def serialize_buff(power: Power) -> TensorDict:
     return TensorDict({"name": power.power_name, "amount": power.amount})
 
 
-def serialize_enemy(monster: Monster) -> TensorDict:
+def serialize_enemy(monster: Monster, encoding_mapper: EncodingMapper) -> TensorDict:
     estimated_damage = monster.move_hits * monster.move_adjusted_damage
     return TensorDict(
         {
@@ -57,12 +58,12 @@ def serialize_orb(orb: Orb) -> str:
     return orb.name
 
 
-def serialize_relic(relic: Relic) -> str:
+def serialize_relic(relic: Relic, encoding_mapper: EncodingMapper) -> str:
     return relic.name
 
 
 # Translate game state to NN readable format
-def game_state_to_NN_input(gameState: Game) -> TensorDict:
+def game_state_to_NN_input(gameState: Game, encoding_mapper: EncodingMapper) -> TensorDict:
     rawDict = {}
 
     rawDict["relics"] = NonTensorStack(map(serialize_relic, gameState.relics))

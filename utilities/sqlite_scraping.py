@@ -1,10 +1,11 @@
 import logging
 
+from Mods.spirecomm.spirecomm.spire.power import Power
 from spirecomm.spire.game import Game
 from spirecomm.spire.relic import Relic
 from spirecomm.spire.potion import Potion
 from spirecomm.spire.card import Card
-from spirecomm.spire.character import Monster, PlayerClass
+from spirecomm.spire.character import Monster, Player, PlayerClass
 from spirecomm.communication.action import *
 import pysqlite3
 
@@ -40,6 +41,9 @@ class EncodingDatabase:
         )
         self.db_connection.execute(
             "CREATE TABLE IF NOT EXISTS potion(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
+        )
+        self.db_connection.execute(
+            "CREATE TABLE IF NOT EXISTS buff(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
         )
 
         self.db_connection.execute(
@@ -91,6 +95,21 @@ class EncodingDatabase:
         )
         return result.fetchone()
 
+    def save_buff(self, name: str):
+        self.db_connection.execute(
+            'INSERT OR IGNORE INTO buff(name, player_class) VALUES("{}", "{}")'.format(
+                name, self.player_class_name
+            )
+        )
+
+    def get_buff(self, name: str):
+        result = self.db_connection.execute(
+            'SELECT * FROM buff where name="{}" AND player_class="{}"'.format(
+                name, self.player_class_name
+            )
+        )
+        return result.fetchone()
+
     def save_enemy(self, name: str):
         self.db_connection.execute(
             'INSERT OR IGNORE INTO enemy(name) VALUES("{}")'.format(name)
@@ -115,6 +134,7 @@ class EncodingMapper:
         self.__scrape_for_monsters(gameState)
         self.__scrape_for_potions(gameState)
         self.__scrape_for_relics(gameState)
+        self.__scrape_for_buffs(gameState)
 
     def __scrape_for_cards(self, gameState: Game):
         logging.debug("Scraping card data")
@@ -149,6 +169,22 @@ class EncodingMapper:
         except Exception as e:
             logging.error("Ran into error while scraping for relics:" + str(e))
 
+    def __scrape_for_buffs(self, gameState: Game):
+        logging.debug("Scraping buff data")
+
+        playerData: Player = gameState.player
+        monsters = gameState.monsters
+
+        try:
+            power: Power
+            for power in [
+                playerData.powers,
+                *map(monsters, lambda monster: monster.powers)
+            ]:
+                self.encoding_database.save_buff(power.name)
+        except Exception as e:
+            logging.error("Ran into error while scraping for buffs:" + str(e))
+
     def __scrape_for_potions(self, gameState: Game):
         logging.debug("Scraping potion data")
         try:
@@ -168,6 +204,10 @@ class EncodingMapper:
 
     def get_potion_encoding(self, name) -> int:
         potion = self.encoding_database.get_potion(name)
+        return potion.id
+
+    def get_buff_encoding(self, name) -> int:
+        potion = self.encoding_database.get_buff(name)
         return potion.id
 
     def get_enemy_encoding(self, name) -> int:
