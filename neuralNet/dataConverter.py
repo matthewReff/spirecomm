@@ -14,7 +14,9 @@ from spirecomm.communication.action import (
 import torch
 
 
-def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> list[TensorDict]:
+def serialize_cards(
+    cards: list[Card], encoding_mapper: EncodingMapper
+) -> list[TensorDict]:
     serialized_cards = []
     for i, card in enumerate(cards):
         serialized_cards.append(
@@ -28,7 +30,9 @@ def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> list[
     return serialized_cards
 
 
-def serialize_potions(potions: list[Potion], encoding_mapper: EncodingMapper) -> list[TensorDict]:
+def serialize_potions(
+    potions: list[Potion], encoding_mapper: EncodingMapper
+) -> list[TensorDict]:
     serialized_potions = []
     for i, potion in enumerate(potions):
         serialized_potions.append(TensorDict({"name": potion.name, "index": i}))
@@ -63,7 +67,9 @@ def serialize_relic(relic: Relic, encoding_mapper: EncodingMapper) -> str:
 
 
 # Translate game state to NN readable format
-def game_state_to_NN_input(gameState: Game, encoding_mapper: EncodingMapper) -> TensorDict:
+def game_state_to_NN_input(
+    gameState: Game, encoding_mapper: EncodingMapper
+) -> TensorDict:
     rawDict = {}
 
     rawDict["relics"] = NonTensorStack(map(serialize_relic, gameState.relics))

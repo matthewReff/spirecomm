@@ -179,7 +179,7 @@ class EncodingMapper:
             power: Power
             for power in [
                 playerData.powers,
-                *map(monsters, lambda monster: monster.powers)
+                *map(monsters, lambda monster: monster.powers),
             ]:
                 self.encoding_database.save_buff(power.name)
         except Exception as e:

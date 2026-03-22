@@ -7,8 +7,10 @@ from neuralNet.agent import SlayAiAgent
 from neuralNet.environment import SlayAiEnvironment
 from neuralNet.interactor import NeuralNetInteractor
 
+
 class NnAgent(Agent):
     encoding_mapper = None
+
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
         self.state_dim = (1, 1)
         self.action_dim = (1, 3)
