@@ -14,92 +14,143 @@ from spirecomm.communication.action import (
 import torch
 
 
-def serialize_cards(
-    cards: list[Card], encoding_mapper: EncodingMapper
-) -> list[TensorDict]:
+def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> torch.Tensor:
     serialized_cards = []
     for i, card in enumerate(cards):
-        serialized_cards.append(
-            {
-                "name": card.name,
-                "cost": card.cost,
-                "index": i,
-                "upgraded": card.upgrades,
-            }
-        )
-    return serialized_cards
+        serialized_cards.append(encoding_mapper.get_card_encoding(card.name))
+        serialized_cards.append(card.cost)
+        serialized_cards.append(i)
+        serialized_cards.append(card.upgrades)
+    return torch.Tensor(serialized_cards)
 
 
 def serialize_potions(
     potions: list[Potion], encoding_mapper: EncodingMapper
-) -> list[TensorDict]:
-    serialized_potions = []
+) -> torch.Tensor:
+    serialized_potions = torch.Tensor()
     for i, potion in enumerate(potions):
-        serialized_potions.append(TensorDict({"name": potion.name, "index": i}))
+        this_potion = torch.Tensor(
+            [encoding_mapper.get_potion_encoding(potion.name), i]
+        )
+        serialized_potions = torch.cat(serialized_potions, this_potion)
     return serialized_potions
 
 
-def serialize_buff(power: Power) -> TensorDict:
-    return TensorDict({"name": power.power_name, "amount": power.amount})
+def serialize_powers(
+    powers: list[Power], encoding_mapper: EncodingMapper
+) -> torch.Tensor:
+    serialized_powers = []
+    for power in powers:
+        serialized_powers.append(encoding_mapper.get_power_encoding(power.name))
+        serialized_powers.append(power.amount)
+    return torch.Tensor(serialized_powers)
 
 
-def serialize_enemy(monster: Monster, encoding_mapper: EncodingMapper) -> TensorDict:
-    estimated_damage = monster.move_hits * monster.move_adjusted_damage
-    return TensorDict(
-        {
-            "name": monster.name,
-            "location_index": monster.monster_index,
-            "health": monster.current_hp,
-            "block": monster.block,
-            "intent": monster.monster_index,
-            "expected_damage": estimated_damage,
-            "buffs": map(serialize_buff, monster.powers),
-        }
-    )
+def serialize_monsters(
+    monsters: list[Monster], encoding_mapper: EncodingMapper
+) -> torch.Tensor:
+    serialized_monsters = torch.Tensor()
+    for monster in monsters:
+        estimated_damage = monster.move_hits * monster.move_adjusted_damage
+        power_tensor = serialize_powers(monster.powers)
+
+        this_monster = torch.Tensor(
+            [
+                encoding_mapper.get_monster_encoding(monster.name),
+                monster.monster_index,
+                monster.max_hp,
+                monster.current_hp,
+                monster.block,
+                estimated_damage,
+                monster.intent,
+            ]
+        )
+        this_monster = torch.cat((this_monster, power_tensor))
+        serialized_monsters = torch.cat((serialized_monsters, this_monster))
+
+    return serialized_monsters
 
 
-def serialize_orb(orb: Orb) -> str:
-    return orb.name
+def serialize_orbs(orbs: list[Orb]) -> torch.Tensor:
+    def decode_orb(name: str) -> int:
+        orb_type = None
+        if name == "Empty":
+            orb_type = 0
+        elif name == "Lightning":
+            orb_type = 1
+        elif name == "Frost":
+            orb_type = 2
+        elif name == "Dark":
+            orb_type = 3
+        elif name == "Plasma":
+            orb_type = 4
+
+        return orb_type
+
+    serialized_orbs = []
+    for orb in orbs:
+        serialized_orbs.push(decode_orb(orb.name))
+    return torch.Tensor(serialized_orbs)
 
 
-def serialize_relic(relic: Relic, encoding_mapper: EncodingMapper) -> str:
-    return relic.name
+def serialize_relics(
+    relics: list[Relic], encoding_mapper: EncodingMapper
+) -> torch.Tensor:
+    serialized_relics = []
+    for relic in relics:
+        serialized_relics.append(encoding_mapper.get_relic_encoding(relic.name))
+        serialized_relics.append(relic.counter)
+    return torch.Tensor(serialized_relics)
 
 
 # Translate game state to NN readable format
 def game_state_to_NN_input(
     gameState: Game, encoding_mapper: EncodingMapper
-) -> TensorDict:
-    rawDict = {}
-
-    rawDict["relics"] = NonTensorStack(map(serialize_relic, gameState.relics))
-    rawDict["potions"] = NonTensorStack(serialize_potions(gameState.potions))
-
+) -> torch.Tensor:
     playerData: Player | None = gameState.player
-    rawDict["buffs"] = (
-        NonTensorStack(map(serialize_buff, playerData.powers))
-        if playerData
-        else NonTensorStack([])
-    )
-    rawDict["current_orbs"] = (
-        NonTensorStack(map(serialize_orb, playerData.orbs))
-        if playerData
-        else NonTensorStack([])
-    )
-    rawDict["energy"] = playerData.energy if playerData else 0
-    rawDict["block"] = playerData.block if playerData else 0
-    rawDict["current_health"] = gameState.current_hp
-    rawDict["max_health"] = gameState.max_hp
+    if playerData is None:
+        raise Exception("Impossible state, missing player data while encoding")
 
-    rawDict["hand_cards"] = NonTensorStack(serialize_cards(gameState.hand))
-    rawDict["discarded_cards"] = NonTensorStack(serialize_cards(gameState.discard_pile))
-    rawDict["exhausted_cards"] = NonTensorStack(serialize_cards(gameState.exhaust_pile))
-    rawDict["remaining_deck_cards"] = NonTensorStack(
-        serialize_cards(gameState.draw_pile)
+    game_state_tensor = torch.Tensor
+
+    relic_tensor = serialize_relics(gameState.relics, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, relic_tensor))
+
+    potions_tensor = serialize_potions(gameState.potions, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, potions_tensor))
+
+    player_power_tensor = serialize_powers(playerData.powers, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, player_power_tensor))
+
+    orb_tensor = serialize_orbs(playerData.orbs, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, orb_tensor))
+
+    player_energy = playerData.energy
+    player_block = playerData.block
+    player_current_health = gameState.current_hp
+    player_max_health = gameState.max_hp
+
+    player_stats_tensor = torch.Tensor(
+        [player_energy, player_block, player_current_health, player_max_health]
     )
+    game_state_tensor = torch.cat((game_state_tensor, player_stats_tensor))
 
-    rawDict["enemies"] = NonTensorStack(map(serialize_enemy, gameState.monsters))
+    cards_in_hand = serialize_cards(gameState.hand, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, cards_in_hand))
 
+    discarded_cards = serialize_cards(gameState.discard_pile, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, discarded_cards))
+
+    exhausted_cards = serialize_cards(gameState.exhaust_pile, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, exhausted_cards))
+
+    deck_cards = serialize_cards(gameState.draw_pile, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, deck_cards))
+
+    enemy_tensor = serialize_monsters(gameState.monsters, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, enemy_tensor))
+
+    # TODO sew this shit pile
     return TensorDict(rawDict)
 
 
