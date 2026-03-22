@@ -1,4 +1,4 @@
-from Mods.spirecomm.utilities.sqlite_scraping import EncodingMapper
+from utilities.sqlite_scraping import EncodingMapper
 from spirecomm.spire.card import Card
 from spirecomm.spire.potion import Potion
 from spirecomm.spire.character import Monster, Player, Orb

@@ -1,6 +1,6 @@
 import logging
 
-from Mods.spirecomm.spirecomm.spire.power import Power
+from spirecomm.spire.power import Power
 from spirecomm.spire.game import Game
 from spirecomm.spire.relic import Relic
 from spirecomm.spire.potion import Potion
@@ -43,7 +43,7 @@ class EncodingDatabase:
             "CREATE TABLE IF NOT EXISTS potion(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
         )
         self.db_connection.execute(
-            "CREATE TABLE IF NOT EXISTS (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
+            "CREATE TABLE IF NOT EXISTS power(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
         )
 
         self.db_connection.execute(
@@ -95,16 +95,16 @@ class EncodingDatabase:
         )
         return result.fetchone()
 
-    def save_(self, name: str):
+    def save_power(self, name: str):
         self.db_connection.execute(
-            'INSERT OR IGNORE INTO (name, player_class) VALUES("{}", "{}")'.format(
+            'INSERT OR IGNORE INTO power(name, player_class) VALUES("{}", "{}")'.format(
                 name, self.player_class_name
             )
         )
 
-    def get_(self, name: str):
+    def get_power(self, name: str):
         result = self.db_connection.execute(
-            'SELECT * FROM  where name="{}" AND player_class="{}"'.format(
+            'SELECT * FROM power where name="{}" AND player_class="{}"'.format(
                 name, self.player_class_name
             )
         )
