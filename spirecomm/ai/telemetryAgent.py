@@ -7,6 +7,7 @@ from spirecomm.ai.agent import Agent
 import json
 import logging
 
+
 class TelemetryAgent(Agent):
     encoding_mapper = None
 
