@@ -4,6 +4,7 @@ from neuralNet.agent import SlayAiAgent
 from neuralNet.environment import SlayAiEnvironment
 from neuralNet.interactor import NeuralNetInteractor
 
+
 class TestInteractorCreation(unittest.TestCase):
     def test_can_create_from_scratch(self):
         slay_ai_agent = SlayAiAgent(self.state_dim, self.action_dim)

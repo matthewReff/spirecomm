@@ -4,8 +4,14 @@ from spirecomm.spire.character import Monster, Player, Orb
 from spirecomm.spire.power import Power
 from spirecomm.spire.relic import Relic
 from spirecomm.spire.game import Game
-from spirecomm.communication.action import Action, EndTurnAction, PlayCardAction, PotionAction
+from spirecomm.communication.action import (
+    Action,
+    EndTurnAction,
+    PlayCardAction,
+    PotionAction,
+)
 import torch
+
 
 def serialize_cards(cards: list[Card]) -> list[TensorDict]:
     serialized_cards = []

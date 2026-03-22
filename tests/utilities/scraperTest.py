@@ -3,6 +3,7 @@ import unittest
 from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
 from spirecomm.spire.character import PlayerClass
 
+
 class TestScraper(unittest.TestCase):
     def test_database_upsert(self):
         db = EncodingDatabase(PlayerClass.DEFECT)
@@ -14,6 +15,7 @@ class TestScraper(unittest.TestCase):
 
         a = encoding_mapper.get_card_encoding("a")
         print(a)
+
 
 if __name__ == "__main__":
     unittest.main()

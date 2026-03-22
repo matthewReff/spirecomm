@@ -1,7 +1,6 @@
 import random
 
 from neuralNet.network import SlayAiNet
-from spirecomm.communication.action import Action, EndTurnAction, PlayCardAction, PotionAction
 import torch
 import numpy as np
 from tensordict import TensorDict
@@ -46,11 +45,13 @@ class SlayAiAgent:
         else:
             pass
 
-        return TensorDict({
-            "target_index": randomTargetIndex,
-            "using_index": randomUsingIndex,
-            "type": action_type
-        })
+        return TensorDict(
+            {
+                "target_index": randomTargetIndex,
+                "using_index": randomUsingIndex,
+                "type": action_type,
+            }
+        )
 
     def optimalAction(self) -> TensorDict:
         state = state[0].__array__() if isinstance(state, tuple) else state.__array__()
