@@ -49,7 +49,7 @@ class SlayAiNet(TensorDictModule):
             nn.ReLU(),
             TensorDictModule(
                 nn.Transformer(512), in_keys=["out"], out_keys=[ActionSpaceKeys]
-            ),
+            )
         )
 
     def td_estimate(self, state, action):

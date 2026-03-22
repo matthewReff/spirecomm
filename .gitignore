@@ -127,3 +127,6 @@ dmypy.json
 
 # Custom
 runs/
+
+# sqlite
+slay-ai

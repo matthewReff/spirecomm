@@ -1,4 +1,7 @@
+import random
+
 from neuralNet.network import SlayAiNet
+from spirecomm.communication.action import Action, EndTurnAction, PlayCardAction, PotionAction
 import torch
 import numpy as np
 from tensordict import TensorDict
@@ -29,10 +32,27 @@ class SlayAiAgent:
         self.learn_every = 3  # no. of experiences between updates to Q_online
         self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
 
-    def randomAction(self):
-        return 0
+    def randomAction(self) -> TensorDict:
+        randomActionNumber = random.randint(0, 10)
+        randomUsingIndex = random.randint(0, 10)
+        randomTargetIndex = random.randint(0, 10)
 
-    def optimalAction(self):
+        # 10% change of ending turn, 10% chance of potion, 80% chance of using card
+        action_type = 0
+        if randomActionNumber == 1:
+            action_type = 2
+        elif 1 < randomActionNumber <= 9:
+            action_type = 1
+        else:
+            pass
+
+        return TensorDict({
+            "target_index": randomTargetIndex,
+            "using_index": randomUsingIndex,
+            "type": action_type
+        })
+
+    def optimalAction(self) -> TensorDict:
         state = state[0].__array__() if isinstance(state, tuple) else state.__array__()
         state = torch.tensor(state, device=self.device).unsqueeze(0)
         action_values = self.net(state, model="online")

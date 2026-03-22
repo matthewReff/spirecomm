@@ -4,9 +4,8 @@ from spirecomm.spire.character import Monster, Player, Orb
 from spirecomm.spire.power import Power
 from spirecomm.spire.relic import Relic
 from spirecomm.spire.game import Game
-from spirecomm.communication.action import *
-from tensordict import TensorDict, NonTensorStack
-
+from spirecomm.communication.action import Action, EndTurnAction, PlayCardAction, PotionAction
+import torch
 
 def serialize_cards(cards: list[Card]) -> list[TensorDict]:
     serialized_cards = []
@@ -92,10 +91,14 @@ def game_state_to_NN_input(gameState: Game) -> TensorDict:
 
 
 # Translate NN output format to readable game state
-def NN_output_to_action(networkOutput: TensorDict) -> Action:
-    type = networkOutput["type"]
-    using_index = networkOutput["using_index"]
-    target_index = networkOutput["target_index"]
+def NN_output_to_action(networkOutput: torch.tensor) -> Action:
+    max_index = torch.argmax(networkOutput)
+    type = max_index // 100
+    max_index = max_index % 100
+
+    using_index = max_index // 10
+    max_index = max_index % 10
+    target_index = max_index
 
     if type == 0:
         return EndTurnAction()

@@ -5,7 +5,7 @@ from spirecomm.ai.agent import Agent
 from neuralNet.agent import SlayAiAgent
 from neuralNet.environment import SlayAiEnvironment
 from neuralNet.interactor import NeuralNetInteractor
-from utilities.scraping import Scraper
+from Mods.spirecomm.utilities.simple_gui import Scraper
 
 
 class NnAgent(Agent):
