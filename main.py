@@ -5,13 +5,15 @@ import logging
 
 from spirecomm.communication.coordinator import Coordinator
 from spirecomm.ai.nnAgent import NnAgent
+from spirecomm.ai.telemetryAgent import TelemetryAgent
 from spirecomm.ai.agent import Agent
 from spirecomm.spire.character import PlayerClass
 
 
 def main():
     logging.basicConfig(filename="neuralNet.log", level=logging.DEBUG)
-    agent: Agent = NnAgent()
+    #agent: Agent = NnAgent()
+    agent: Agent = TelemetryAgent
     coordinator = Coordinator()
     coordinator.signal_ready()
     coordinator.register_command_error_callback(agent.handle_error)
