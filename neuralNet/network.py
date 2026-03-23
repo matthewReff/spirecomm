@@ -1,14 +1,12 @@
 import torch
 import numpy as np
 from torch import nn
-from tensordict.nn import TensorDictSequential, TensorDictModule
 
-from neuralNet.stateDefinitions import ActionSpaceKeys, StateSpaceKeys
 
 # https://docs.pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 
 
-class SlayAiNet(TensorDictModule):
+class SlayAiNet(nn.Module):
     """mini CNN structure
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
     """
@@ -35,21 +33,18 @@ class SlayAiNet(TensorDictModule):
             return self.target(input)
 
     def __build_nn(self):
-        return TensorDictSequential(
-            TensorDictModule(
-                nn.Transformer(128), in_keys=StateSpaceKeys, out_keys=["out"]
-            ),
+        return nn.Sequential(
+            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=8),
             nn.ReLU(),
-            nn.Conv1d(in_channels=32, out_channels=64, kernel_size=4),
+            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=4),
             nn.ReLU(),
-            nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3),
+            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=3),
             nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(3136, 512),
+            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=2),
             nn.ReLU(),
-            TensorDictModule(
-                nn.Transformer(512), in_keys=["out"], out_keys=[ActionSpaceKeys]
-            ),
+            nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=1),
+            nn.ReLU(),
+            nn.Linear(512, 299),
         )
 
     def td_estimate(self, state, action):

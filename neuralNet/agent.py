@@ -8,10 +8,10 @@ from torchrl.data import TensorDictReplayBuffer, LazyMemmapStorage
 
 
 class SlayAiAgent:
-    def __init__(self, state_dim, action_dim):
+    def __init__(self):
         # Generic Setup
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.net = SlayAiNet(state_dim, action_dim).float()
+        self.net = SlayAiNet().float()
         self.net = self.net.to(device=self.device)
 
         # Exploration params
@@ -32,48 +32,49 @@ class SlayAiAgent:
         self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
 
     def randomAction(self) -> TensorDict:
-        randomActionNumber = random.randint(0, 10)
-        randomUsingIndex = random.randint(0, 10)
-        randomTargetIndex = random.randint(0, 10)
+        random_action_number = random.randint(0, 10)
+        random_using_index = random.randint(0, 10)
+        random_target_index = random.randint(0, 10)
 
         # 10% change of ending turn, 10% chance of potion, 80% chance of using card
         action_type = 0
-        if randomActionNumber == 1:
+        if random_action_number == 1:
             action_type = 2
-        elif 1 < randomActionNumber <= 9:
+        elif 1 < random_action_number <= 9:
             action_type = 1
         else:
             pass
 
-        return TensorDict(
-            {
-                "target_index": randomTargetIndex,
-                "using_index": randomUsingIndex,
-                "type": action_type,
-            }
+        encodedIndex = (
+            (action_type * 100) + (random_using_index * 10) + random_target_index
         )
+        return encodedIndex
 
-    def optimalAction(self) -> TensorDict:
-        state = state[0].__array__() if isinstance(state, tuple) else state.__array__()
-        state = torch.tensor(state, device=self.device).unsqueeze(0)
-        action_values = self.net(state, model="online")
-        action_idx = torch.argmax(action_values, axis=1).item()
+    def optimalAction(self, game_state: torch.Tensor) -> TensorDict:
+        game_state = (
+            game_state[0].__array__()
+            if isinstance(game_state, tuple)
+            else game_state.__array__()
+        )
+        game_state = torch.tensor(game_state, device=self.device).unsqueeze(0)
+        action_values = self.net(game_state, model="online")
+        action_index = torch.argmax(action_values, axis=1).item()
 
-        return action_values[action_idx]
+        return action_index
 
     def act(self, game_state):
         should_explore = np.random.rand() < self.exploration_rate
 
         if should_explore:
-            action_to_take = self.randomAction()
+            action_index = self.randomAction()
         else:
-            action_to_take = self.optimalAction()
+            action_index = self.optimalAction(game_state)
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
 
         self.curr_step += 1
-        return action_to_take
+        return action_index
 
     def cache(self, state, next_state, action, reward, done):
         def first_if_tuple(x):

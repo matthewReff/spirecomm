@@ -209,14 +209,13 @@ def game_state_to_NN_input(
 
 # Translate NN output format to readable game state
 # Output is is (299,)
-def NN_output_to_action(networkOutput: torch.tensor) -> Action:
-    max_index = torch.argmax(networkOutput)
-    type = max_index // 100
-    max_index = max_index % 100
+def NN_output_to_action(action_index: int) -> Action:
+    type = action_index // 100
+    action_index = action_index % 100
 
-    using_index = max_index // 10
-    max_index = max_index % 10
-    target_index = max_index
+    using_index = action_index // 10
+    action_index = action_index % 10
+    target_index = action_index
 
     if type == 0:
         return EndTurnAction()
