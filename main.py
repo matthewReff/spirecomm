@@ -12,7 +12,7 @@ from spirecomm.spire.character import PlayerClass
 def main():
     logging.basicConfig(filename="neuralNet.log", level=logging.DEBUG)
     # agent: Agent = NnAgent()
-    agent: Agent = TelemetryAgent
+    agent: Agent = TelemetryAgent(PlayerClass.DEFECT)
     coordinator = Coordinator()
     coordinator.signal_ready()
     coordinator.register_command_error_callback(agent.handle_error)

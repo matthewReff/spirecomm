@@ -7,7 +7,7 @@ from spirecomm.spire.potion import Potion
 from spirecomm.spire.card import Card
 from spirecomm.spire.character import Monster, Player, PlayerClass
 from spirecomm.communication.action import *
-import pysqlite3
+import sqlite3
 
 
 def get_class_name(player_class: PlayerClass) -> str:
@@ -30,9 +30,9 @@ class EncodingDatabase:
     def __init__(self, player_class: PlayerClass):
         self.player_class = player_class
         self.player_class_name = self.player_class_name
-        self.db_connection = pysqlite3.connect("slay-ai")
+        self.db_connection = sqlite3.connect("slay-ai")
 
-    def upsert_tables(self):
+    def _upsert_tables(self):
         self.db_connection.execute(
             "CREATE TABLE IF NOT EXISTS card(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
         )
@@ -173,13 +173,15 @@ class EncodingMapper:
         logging.debug("Scraping power data")
 
         playerData: Player = gameState.player
-        monsters = gameState.monsters
+        monsters: list[Monster] = gameState.monsters
+
+        all_monster_powers = [monster.powers or [] for monster in monsters]
 
         try:
             power: Power
             for power in [
-                playerData.powers,
-                *map(monsters, lambda monster: monster.powers),
+                *playerData.powers,
+                *all_monster_powers,
             ]:
                 self.encoding_database.save_power(power.name)
         except Exception as e:

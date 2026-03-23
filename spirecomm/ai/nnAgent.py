@@ -19,6 +19,7 @@ class NnAgent(Agent):
         self.interactor = NeuralNetInteractor(slay_ai_agent, slay_ai_environment)
 
         db = EncodingDatabase(chosen_class)
+        db._upsert_tables()
         self.encoding_mapper = EncodingMapper(db)
         super().__init__(chosen_class)
 

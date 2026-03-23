@@ -1,18 +1,16 @@
-from Mods.spirecomm.spirecomm.spire.game import Game
-from Mods.spirecomm.utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
+from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
 from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
-import json
-import logging
 
 
 class TelemetryAgent(Agent):
     encoding_mapper = None
 
-    def __init__(self, chosen_class=PlayerClass.THE_SILENT):
+    def __init__(self, chosen_class: PlayerClass):
         db = EncodingDatabase(chosen_class)
+        db._upsert_tables()
         self.encoding_mapper = EncodingMapper(db)
         super().__init__(chosen_class)
 
@@ -23,7 +21,6 @@ class TelemetryAgent(Agent):
 
     def get_next_combat_action(self):
         self.encoding_mapper.scrape_state(self.game)
-        self._dump_game_state(self.game)
         return super().get_next_combat_action()
 
     def get_card_reward_action(self):
@@ -49,7 +46,3 @@ class TelemetryAgent(Agent):
     def get_next_boss_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
         return super().get_next_boss_reward_action()
-
-    def _dump_game_state(self, game_state: Game):
-        game_state_as_json = json.dumps(game_state, sort_keys=True, indent=4)
-        logging.debug(game_state_as_json)

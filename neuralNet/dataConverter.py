@@ -15,12 +15,21 @@ import torch
 
 
 def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> torch.Tensor:
-    serialized_cards = []
+    serialized_cards = torch.Tensor()
+    REQUIRED_ENTRIES = 10
+
     for i, card in enumerate(cards):
-        serialized_cards.append(encoding_mapper.get_card_encoding(card.name))
-        serialized_cards.append(card.cost)
-        serialized_cards.append(i)
-        serialized_cards.append(card.upgrades)
+        this_card = torch.Tensor(
+            [encoding_mapper.get_card_encoding(card.name), card.cost, i, card.upgrades]
+        )
+        serialized_cards = torch.cat((serialized_cards, this_card))
+
+    missing_entry_count = REQUIRED_ENTRIES - cards.length
+    missing_entries = torch.zeros(
+        missing_entry_count * 4,
+    )
+    serialized_cards = torch.cat((serialized_cards, missing_entries))
+
     return torch.Tensor(serialized_cards)
 
 
@@ -28,21 +37,39 @@ def serialize_potions(
     potions: list[Potion], encoding_mapper: EncodingMapper
 ) -> torch.Tensor:
     serialized_potions = torch.Tensor()
+    REQUIRED_ENTRIES = 10
+
     for i, potion in enumerate(potions):
         this_potion = torch.Tensor(
             [encoding_mapper.get_potion_encoding(potion.name), i]
         )
-        serialized_potions = torch.cat(serialized_potions, this_potion)
+        serialized_potions = torch.cat((serialized_potions, this_potion))
+
+    missing_entry_count = REQUIRED_ENTRIES - potions.length
+    missing_entries = torch.zeros(
+        missing_entry_count * 2,
+    )
+    serialized_potions = torch.cat((serialized_potions, missing_entries))
     return serialized_potions
 
 
 def serialize_powers(
     powers: list[Power], encoding_mapper: EncodingMapper
 ) -> torch.Tensor:
-    serialized_powers = []
+    serialized_powers = torch.Tensor()
+    REQUIRED_ENTRIES = 15
+
     for power in powers:
-        serialized_powers.append(encoding_mapper.get_power_encoding(power.name))
-        serialized_powers.append(power.amount)
+        this_power = torch.Tensor(
+            [encoding_mapper.get_power_encoding(power.name), power.amount]
+        )
+        serialized_powers = torch.cat((serialized_powers, this_power))
+
+    missing_entry_count = REQUIRED_ENTRIES - powers.length
+    missing_entries = torch.zeros(
+        missing_entry_count * 2,
+    )
+    serialized_powers = torch.cat((serialized_powers, missing_entries))
     return torch.Tensor(serialized_powers)
 
 
@@ -50,6 +77,8 @@ def serialize_monsters(
     monsters: list[Monster], encoding_mapper: EncodingMapper
 ) -> torch.Tensor:
     serialized_monsters = torch.Tensor()
+    REQUIRED_ENTRIES = 10
+
     for monster in monsters:
         estimated_damage = monster.move_hits * monster.move_adjusted_damage
         power_tensor = serialize_powers(monster.powers)
@@ -68,6 +97,11 @@ def serialize_monsters(
         this_monster = torch.cat((this_monster, power_tensor))
         serialized_monsters = torch.cat((serialized_monsters, this_monster))
 
+    missing_entry_count = REQUIRED_ENTRIES - monsters.length
+    missing_entries = torch.zeros(
+        missing_entry_count * 7,
+    )
+    serialized_monsters = torch.cat((serialized_monsters, missing_entries))
     return serialized_monsters
 
 
@@ -87,20 +121,40 @@ def serialize_orbs(orbs: list[Orb]) -> torch.Tensor:
 
         return orb_type
 
-    serialized_orbs = []
+    serialized_orbs = torch.Tensor()
+    REQUIRED_ENTRIES = 10
+
     for orb in orbs:
-        serialized_orbs.push(decode_orb(orb.name))
-    return torch.Tensor(serialized_orbs)
+        this_orb = torch.Tensor([decode_orb(orb.name)])
+        serialized_orbs = torch.cat((serialized_orbs, this_orb))
+
+    missing_entry_count = REQUIRED_ENTRIES - orbs.length
+    missing_entries = torch.zeros(
+        missing_entry_count * 1,
+    )
+    serialized_orbs = torch.cat((serialized_orbs, missing_entries))
+    return serialized_orbs
 
 
 def serialize_relics(
     relics: list[Relic], encoding_mapper: EncodingMapper
 ) -> torch.Tensor:
-    serialized_relics = []
+    serialized_relics = torch.Tensor()
+    REQUIRED_ENTRIES = 30
+
     for relic in relics:
-        serialized_relics.append(encoding_mapper.get_relic_encoding(relic.name))
-        serialized_relics.append(relic.counter)
-    return torch.Tensor(serialized_relics)
+        this_relic = torch.Tensor(
+            [encoding_mapper.get_relic_encoding(relic.name), relic.counter]
+        )
+        serialized_relics = torch.cat((serialized_relics, this_relic))
+
+    missing_entry_count = REQUIRED_ENTRIES - relics.length
+    missing_entries = torch.zeros(
+        missing_entry_count * 2,
+    )
+    serialized_relics = torch.cat((serialized_relics, missing_entries))
+
+    return serialized_relics
 
 
 # Translate game state to NN readable format
@@ -150,11 +204,11 @@ def game_state_to_NN_input(
     enemy_tensor = serialize_monsters(gameState.monsters, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, enemy_tensor))
 
-    # TODO sew this shit pile
-    return TensorDict(rawDict)
+    return game_state_tensor
 
 
 # Translate NN output format to readable game state
+# Output is is (299,)
 def NN_output_to_action(networkOutput: torch.tensor) -> Action:
     max_index = torch.argmax(networkOutput)
     type = max_index // 100
