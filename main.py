@@ -3,16 +3,15 @@ import time
 import os
 import logging
 
+from spirecomm.ai.nnAgent import NnAgent
 from spirecomm.communication.coordinator import Coordinator
-from spirecomm.ai.telemetryAgent import TelemetryAgent
 from spirecomm.ai.agent import Agent
 from spirecomm.spire.character import PlayerClass
 
 
 def main():
     logging.basicConfig(filename="neuralNet.log", level=logging.DEBUG)
-    # agent: Agent = NnAgent()
-    agent: Agent = TelemetryAgent(PlayerClass.DEFECT)
+    agent: Agent = NnAgent(PlayerClass.DEFECT)
     coordinator = Coordinator()
     coordinator.signal_ready()
     coordinator.register_command_error_callback(agent.handle_error)

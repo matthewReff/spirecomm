@@ -4,7 +4,6 @@ from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 from neuralNet.agent import SlayAiAgent
-from neuralNet.environment import SlayAiEnvironment
 from neuralNet.interactor import NeuralNetInteractor
 
 
@@ -12,11 +11,8 @@ class NnAgent(Agent):
     encoding_mapper = None
 
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
-        self.state_dim = (1, 1)
-        self.action_dim = (1, 3)
-        slay_ai_agent = SlayAiAgent(self.state_dim, self.action_dim)
-        slay_ai_environment = SlayAiEnvironment()
-        self.interactor = NeuralNetInteractor(slay_ai_agent, slay_ai_environment)
+        slay_ai_agent = SlayAiAgent()
+        self.interactor = NeuralNetInteractor(slay_ai_agent)
 
         db = EncodingDatabase(chosen_class)
         db._upsert_tables()
@@ -30,8 +26,7 @@ class NnAgent(Agent):
 
     def get_next_combat_action(self):
         self.encoding_mapper.scrape_state(self.game)
-        return super().get_next_combat_action()
-        # return self.interactor.run_combat(self.game)
+        return self.interactor.run_combat(self.game)
 
     def get_card_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)

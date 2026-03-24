@@ -4,8 +4,7 @@ from neuralNet.dataConverter import *
 
 
 class NeuralNetInteractor:
-    def __init__(self, aiEnvironment, aiAgent):
-        self.aiEnvironment = aiEnvironment
+    def __init__(self, aiAgent):
         self.aiAgent = aiAgent
 
     def run_combat(self, gameState: Game) -> Action:

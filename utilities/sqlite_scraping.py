@@ -30,32 +30,34 @@ class EncodingDatabase:
     def __init__(self, player_class: PlayerClass):
         self.player_class = player_class
         self.player_class_name = self.player_class_name
-        self.db_connection = sqlite3.connect("slay-ai")
+        self.db_connection = sqlite3.connect("slay-ai.db")
 
     def _upsert_tables(self):
-        self.db_connection.execute(
-            "CREATE TABLE IF NOT EXISTS card(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
-        )
-        self.db_connection.execute(
-            "CREATE TABLE IF NOT EXISTS relic(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
-        )
-        self.db_connection.execute(
-            "CREATE TABLE IF NOT EXISTS potion(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
-        )
-        self.db_connection.execute(
-            "CREATE TABLE IF NOT EXISTS power(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
-        )
+        with self.db_connection:
+            self.db_connection.execute(
+                "CREATE TABLE IF NOT EXISTS card(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
+            )
+            self.db_connection.execute(
+                "CREATE TABLE IF NOT EXISTS relic(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
+            )
+            self.db_connection.execute(
+                "CREATE TABLE IF NOT EXISTS potion(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
+            )
+            self.db_connection.execute(
+                "CREATE TABLE IF NOT EXISTS power(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, CONSTRAINT player_scope UNIQUE (player_class, name) ON CONFLICT REPLACE)"
+            )
 
-        self.db_connection.execute(
-            "CREATE TABLE IF NOT EXISTS monster(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
-        )
+            self.db_connection.execute(
+                "CREATE TABLE IF NOT EXISTS monster(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR UNIQUE, player_class VARCHAR UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+            )
 
     def save_card(self, name: str):
-        self.db_connection.execute(
-            'INSERT OR IGNORE INTO card(name, player_class) VALUES("{}", "{}")'.format(
-                name, self.player_class_name
+        with self.db_connection:
+            self.db_connection.execute(
+                'INSERT OR IGNORE INTO card(name, player_class) VALUES("{}", "{}")'.format(
+                    name, self.player_class_name
+                )
             )
-        )
 
     def get_card(self, name: str):
         result = self.db_connection.execute(
@@ -66,11 +68,12 @@ class EncodingDatabase:
         return result.fetchone()
 
     def save_relic(self, name: str):
-        self.db_connection.execute(
-            'INSERT OR IGNORE INTO relic(name, player_class) VALUES("{}", "{}")'.format(
-                name, self.player_class_name
+        with self.db_connection:
+            self.db_connection.execute(
+                'INSERT OR IGNORE INTO relic(name, player_class) VALUES("{}", "{}")'.format(
+                    name, self.player_class_name
+                )
             )
-        )
 
     def get_relic(self, name: str):
         result = self.db_connection.execute(
@@ -81,11 +84,12 @@ class EncodingDatabase:
         return result.fetchone()
 
     def save_potion(self, name: str):
-        self.db_connection.execute(
-            'INSERT OR IGNORE INTO potion(name, player_class) VALUES("{}", "{}")'.format(
-                name, self.player_class_name
+        with self.db_connection:
+            self.db_connection.execute(
+                'INSERT OR IGNORE INTO potion(name, player_class) VALUES("{}", "{}")'.format(
+                    name, self.player_class_name
+                )
             )
-        )
 
     def get_potion(self, name: str):
         result = self.db_connection.execute(
@@ -96,11 +100,12 @@ class EncodingDatabase:
         return result.fetchone()
 
     def save_power(self, name: str):
-        self.db_connection.execute(
-            'INSERT OR IGNORE INTO power(name, player_class) VALUES("{}", "{}")'.format(
-                name, self.player_class_name
+        with self.db_connection:
+            self.db_connection.execute(
+                'INSERT OR IGNORE INTO power(name, player_class) VALUES("{}", "{}")'.format(
+                    name, self.player_class_name
+                )
             )
-        )
 
     def get_power(self, name: str):
         result = self.db_connection.execute(
@@ -111,9 +116,10 @@ class EncodingDatabase:
         return result.fetchone()
 
     def save_monster(self, name: str):
-        self.db_connection.execute(
-            'INSERT OR IGNORE INTO monster(name) VALUES("{}")'.format(name)
-        )
+        with self.db_connection:
+            self.db_connection.execute(
+                'INSERT OR IGNORE INTO monster(name) VALUES("{}")'.format(name)
+            )
 
     def get_monster(self, name: str):
         result = self.db_connection.execute(
@@ -172,18 +178,20 @@ class EncodingMapper:
     def __scrape_for_powers(self, gameState: Game):
         logging.debug("Scraping power data")
 
-        playerData: Player = gameState.player
+        playerData: Player | None = gameState.player
         monsters: list[Monster] = gameState.monsters
 
-        all_monster_powers = [monster.powers or [] for monster in monsters]
+        all_powers = []
+        if playerData is not None:
+            all_powers = all_powers + [power for power in playerData.powers]
+        for monster in monsters:
+            monster_powers = [power for power in monster.powers]
+            all_powers = all_powers + monster_powers
 
         try:
             power: Power
-            for power in [
-                *playerData.powers,
-                *all_monster_powers,
-            ]:
-                self.encoding_database.save_power(power.name)
+            for power in all_powers:
+                self.encoding_database.save_power(power.power_name)
         except Exception as e:
             logging.error("Ran into error while scraping for powers:" + str(e))
 

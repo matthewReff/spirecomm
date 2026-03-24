@@ -61,7 +61,7 @@ def serialize_powers(
 
     for power in powers:
         this_power = torch.Tensor(
-            [encoding_mapper.get_power_encoding(power.name), power.amount]
+            [encoding_mapper.get_power_encoding(power.power_name), power.amount]
         )
         serialized_powers = torch.cat((serialized_powers, this_power))
 
