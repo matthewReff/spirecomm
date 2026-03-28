@@ -1,10 +1,13 @@
-from Mods.spirecomm.utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
+from neuralNet.metricLogger import MetricLogger
+from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
 from spirecomm.spire.character import PlayerClass
 from spirecomm.communication.action import *
 from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 from neuralNet.agent import SlayAiAgent
 from neuralNet.interactor import NeuralNetInteractor
+import datetime
+from pathlib import Path
 
 
 class NnAgent(Agent):
@@ -12,7 +15,13 @@ class NnAgent(Agent):
 
     def __init__(self, chosen_class=PlayerClass.THE_SILENT):
         slay_ai_agent = SlayAiAgent()
-        self.interactor = NeuralNetInteractor(slay_ai_agent)
+
+        save_dir = Path("checkpoints") / datetime.datetime.now().strftime(
+            "%Y-%m-%dT%H-%M-%S"
+        )
+        save_dir.mkdir(parents=True)
+        training_logger = MetricLogger()
+        self.interactor = NeuralNetInteractor(slay_ai_agent, training_logger)
 
         db = EncodingDatabase(chosen_class)
         db._upsert_tables()
@@ -24,8 +33,16 @@ class NnAgent(Agent):
         self.encoding_mapper = EncodingMapper(db)
         return super().change_class(chosen_class)
 
+    def before_action_taken(self):
+        self.interactor.save_game_state(self.game)
+        self.interactor.learn_from_action()
+
     def get_next_combat_action(self):
         self.encoding_mapper.scrape_state(self.game)
+
+        # You stayed alive
+        self.interactor.grant_reward(0.1)
+
         return self.interactor.run_combat(self.game)
 
     def get_card_reward_action(self):
@@ -46,8 +63,12 @@ class NnAgent(Agent):
 
     def get_next_combat_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
+
+        self.interactor.grant_reward(1)
         return super().get_next_combat_reward_action()
 
     def get_next_boss_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
+
+        self.interactor.grant_reward(10)
         return super().get_next_boss_reward_action()

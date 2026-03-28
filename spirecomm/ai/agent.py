@@ -31,6 +31,9 @@ class Agent(metaclass=ABCMeta):
         self.game = game_state
         logging.info("Getting next game action")
         logging.debug("Using state: " + str(game_state))
+
+        self.before_action_taken()
+
         if self.game.choice_available:
             chosenAction = self.get_screen_action()
         elif self.game.proceed_available:
@@ -346,6 +349,10 @@ class Agent(metaclass=ABCMeta):
                 return ChooseAction(0)
         else:
             return ProceedAction()
+
+    @abstractmethod
+    def before_action_taken(self):
+        logging.debug("before_action_taken not set")
 
     @abstractmethod
     def get_next_combat_action(self):

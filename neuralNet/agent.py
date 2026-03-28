@@ -31,7 +31,7 @@ class SlayAiAgent:
         self.learn_every = 3  # no. of experiences between updates to Q_online
         self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
 
-    def randomAction(self) -> TensorDict:
+    def randomAction(self) -> int:
         random_action_number = random.randint(0, 10)
         random_using_index = random.randint(0, 10)
         random_target_index = random.randint(0, 10)
@@ -50,7 +50,7 @@ class SlayAiAgent:
         )
         return encodedIndex
 
-    def optimalAction(self, game_state: torch.Tensor) -> TensorDict:
+    def optimalAction(self, game_state: torch.Tensor) -> int:
         game_state = (
             game_state[0].__array__()
             if isinstance(game_state, tuple)

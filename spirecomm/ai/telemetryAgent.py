@@ -19,6 +19,9 @@ class TelemetryAgent(Agent):
         self.encoding_mapper = EncodingMapper(db)
         return super().change_class(chosen_class)
 
+    def before_action_taken(self):
+        return super().before_action_taken()
+
     def get_next_combat_action(self):
         self.encoding_mapper.scrape_state(self.game)
         return super().get_next_combat_action()

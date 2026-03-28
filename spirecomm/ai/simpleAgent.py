@@ -14,6 +14,9 @@ class SimpleAgent(Agent):
     def get_next_combat_action(self):
         return super().get_next_combat_action()
 
+    def before_action_taken(self):
+        return super().before_action_taken()
+
     def get_card_reward_action(self):
         return super().get_card_reward_action()
 
