@@ -1,7 +1,5 @@
 from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
 from spirecomm.spire.character import PlayerClass
-from spirecomm.communication.action import *
-from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 
 
@@ -19,8 +17,8 @@ class TelemetryAgent(Agent):
         self.encoding_mapper = EncodingMapper(db)
         return super().change_class(chosen_class)
 
-    def before_action_taken(self):
-        return super().before_action_taken()
+    def before_combat_action(self):
+        return super().before_combat_action()
 
     def get_next_combat_action(self):
         self.encoding_mapper.scrape_state(self.game)

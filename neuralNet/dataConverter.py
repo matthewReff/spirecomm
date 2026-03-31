@@ -11,6 +11,7 @@ from spirecomm.communication.action import (
     PlayCardAction,
     PotionAction,
 )
+import logging
 import torch
 
 
@@ -24,7 +25,7 @@ def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> torch
         )
         serialized_cards = torch.cat((serialized_cards, this_card))
 
-    missing_entry_count = REQUIRED_ENTRIES - cards.length
+    missing_entry_count = REQUIRED_ENTRIES - len(cards)
     missing_entries = torch.zeros(
         missing_entry_count * 4,
     )
@@ -45,7 +46,7 @@ def serialize_potions(
         )
         serialized_potions = torch.cat((serialized_potions, this_potion))
 
-    missing_entry_count = REQUIRED_ENTRIES - potions.length
+    missing_entry_count = REQUIRED_ENTRIES - len(potions)
     missing_entries = torch.zeros(
         missing_entry_count * 2,
     )
@@ -65,7 +66,7 @@ def serialize_powers(
         )
         serialized_powers = torch.cat((serialized_powers, this_power))
 
-    missing_entry_count = REQUIRED_ENTRIES - powers.length
+    missing_entry_count = REQUIRED_ENTRIES - len(powers)
     missing_entries = torch.zeros(
         missing_entry_count * 2,
     )
@@ -81,7 +82,7 @@ def serialize_monsters(
 
     for monster in monsters:
         estimated_damage = monster.move_hits * monster.move_adjusted_damage
-        power_tensor = serialize_powers(monster.powers)
+        power_tensor = serialize_powers(monster.powers, encoding_mapper)
 
         this_monster = torch.Tensor(
             [
@@ -91,13 +92,13 @@ def serialize_monsters(
                 monster.current_hp,
                 monster.block,
                 estimated_damage,
-                monster.intent,
+                monster.intent.value,
             ]
         )
         this_monster = torch.cat((this_monster, power_tensor))
         serialized_monsters = torch.cat((serialized_monsters, this_monster))
 
-    missing_entry_count = REQUIRED_ENTRIES - monsters.length
+    missing_entry_count = REQUIRED_ENTRIES - len(monsters)
     missing_entries = torch.zeros(
         missing_entry_count * 7,
     )
@@ -107,8 +108,9 @@ def serialize_monsters(
 
 def serialize_orbs(orbs: list[Orb]) -> torch.Tensor:
     def decode_orb(name: str) -> int:
+        logging.debug("Orb name debug " + name)
         orb_type = None
-        if name == "Empty":
+        if name == "Orb Slot":
             orb_type = 0
         elif name == "Lightning":
             orb_type = 1
@@ -128,7 +130,7 @@ def serialize_orbs(orbs: list[Orb]) -> torch.Tensor:
         this_orb = torch.Tensor([decode_orb(orb.name)])
         serialized_orbs = torch.cat((serialized_orbs, this_orb))
 
-    missing_entry_count = REQUIRED_ENTRIES - orbs.length
+    missing_entry_count = REQUIRED_ENTRIES - len(orbs)
     missing_entries = torch.zeros(
         missing_entry_count * 1,
     )
@@ -148,7 +150,7 @@ def serialize_relics(
         )
         serialized_relics = torch.cat((serialized_relics, this_relic))
 
-    missing_entry_count = REQUIRED_ENTRIES - relics.length
+    missing_entry_count = REQUIRED_ENTRIES - len(relics)
     missing_entries = torch.zeros(
         missing_entry_count * 2,
     )
@@ -165,7 +167,18 @@ def game_state_to_NN_input(
     if playerData is None:
         raise Exception("Impossible state, missing player data while encoding")
 
-    game_state_tensor = torch.Tensor
+    game_state_tensor = torch.Tensor()
+
+    # player_powers = playerData.powers if playerData.powers is not None else []
+    player_power_tensor = serialize_powers(playerData.powers, encoding_mapper)
+    game_state_tensor = torch.cat((game_state_tensor, player_power_tensor))
+
+    # players_orbs = playerData.orbs if playerData.orbs is not None else []
+    orb_tensor = serialize_orbs(playerData.orbs)
+    game_state_tensor = torch.cat((game_state_tensor, orb_tensor))
+
+    player_energy = playerData.energy
+    player_block = playerData.block
 
     relic_tensor = serialize_relics(gameState.relics, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, relic_tensor))
@@ -173,14 +186,6 @@ def game_state_to_NN_input(
     potions_tensor = serialize_potions(gameState.potions, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, potions_tensor))
 
-    player_power_tensor = serialize_powers(playerData.powers, encoding_mapper)
-    game_state_tensor = torch.cat((game_state_tensor, player_power_tensor))
-
-    orb_tensor = serialize_orbs(playerData.orbs, encoding_mapper)
-    game_state_tensor = torch.cat((game_state_tensor, orb_tensor))
-
-    player_energy = playerData.energy
-    player_block = playerData.block
     player_current_health = gameState.current_hp
     player_max_health = gameState.max_hp
 

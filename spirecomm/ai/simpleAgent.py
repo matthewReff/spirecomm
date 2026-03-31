@@ -1,6 +1,4 @@
 from spirecomm.spire.character import PlayerClass
-from spirecomm.communication.action import *
-from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 
 
@@ -14,8 +12,8 @@ class SimpleAgent(Agent):
     def get_next_combat_action(self):
         return super().get_next_combat_action()
 
-    def before_action_taken(self):
-        return super().before_action_taken()
+    def before_combat_action(self):
+        return super().before_combat_action()
 
     def get_card_reward_action(self):
         return super().get_card_reward_action()

@@ -76,15 +76,15 @@ class SlayAiAgent:
         self.curr_step += 1
         return action_index
 
-    def cache(self, state, next_state, action, reward, done):
-        def first_if_tuple(x):
-            return x[0] if isinstance(x, tuple) else x
-
-        state = first_if_tuple(state).__array__()
-        next_state = first_if_tuple(next_state).__array__()
-
-        state = torch.tensor(state)
-        next_state = torch.tensor(next_state)
+    # Make sure to encode the state before caching
+    def cache(
+        self,
+        state: torch.Tensor,
+        next_state: torch.Tensor,
+        action: int,
+        reward: int,
+        done: int,
+    ):
         action = torch.tensor([action])
         reward = torch.tensor([reward])
         done = torch.tensor([done])

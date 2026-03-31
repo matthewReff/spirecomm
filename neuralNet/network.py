@@ -7,10 +7,6 @@ from torch import nn
 
 
 class SlayAiNet(nn.Module):
-    """mini CNN structure
-    input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
-    """
-
     def __init__(self):
         super().__init__()
         self.online = self.__build_nn()
@@ -23,7 +19,7 @@ class SlayAiNet(nn.Module):
             p.requires_grad = False
 
         self.gamma = 0.9
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
+        self.optimizer = torch.optim.Adam(self.online.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
     def forward(self, input, model):
@@ -48,16 +44,16 @@ class SlayAiNet(nn.Module):
         )
 
     def td_estimate(self, state, action):
-        current_Q = self.net(state, model="online")[
+        current_Q = self.forward(state, model="online")[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a)
         return current_Q
 
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
-        next_state_Q = self.net(next_state, model="online")
+        next_state_Q = self.forward(next_state, model="online")
         best_action = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.net(next_state, model="target")[
+        next_Q = self.forward(next_state, model="target")[
             np.arange(0, self.batch_size), best_action
         ]
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
@@ -70,7 +66,7 @@ class SlayAiNet(nn.Module):
         return loss.item()
 
     def sync_Q_target(self):
-        self.net.target.load_state_dict(self.net.online.state_dict())
+        self.target.load_state_dict(self.online.state_dict())
 
     def save(self):
         save_path = (
@@ -78,7 +74,9 @@ class SlayAiNet(nn.Module):
             / f"slay_ai_net_{int(self.curr_step // self.save_every)}.chkpt"
         )
         torch.save(
-            dict(model=self.net.state_dict(), exploration_rate=self.exploration_rate),
+            dict(
+                model=self.online.state_dict(), exploration_rate=self.exploration_rate
+            ),
             save_path,
         )
         print(f"SlayAiNet saved to {save_path} at step {self.curr_step}")

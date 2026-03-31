@@ -1,8 +1,6 @@
 from neuralNet.metricLogger import MetricLogger
 from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
 from spirecomm.spire.character import PlayerClass
-from spirecomm.communication.action import *
-from spirecomm.ai.priorities import *
 from spirecomm.ai.agent import Agent
 from neuralNet.agent import SlayAiAgent
 from neuralNet.interactor import NeuralNetInteractor
@@ -12,28 +10,37 @@ from pathlib import Path
 
 class NnAgent(Agent):
     encoding_mapper = None
+    slay_ai_agent = None
+    training_logger = None
 
-    def __init__(self, chosen_class=PlayerClass.THE_SILENT):
-        slay_ai_agent = SlayAiAgent()
+    def __init__(self, chosen_class):
+        self.slay_ai_agent = SlayAiAgent()
 
         save_dir = Path("checkpoints") / datetime.datetime.now().strftime(
             "%Y-%m-%dT%H-%M-%S"
         )
         save_dir.mkdir(parents=True)
-        training_logger = MetricLogger()
-        self.interactor = NeuralNetInteractor(slay_ai_agent, training_logger)
+        self.training_logger = MetricLogger(save_dir)
 
         db = EncodingDatabase(chosen_class)
         db._upsert_tables()
         self.encoding_mapper = EncodingMapper(db)
+
+        self.interactor = NeuralNetInteractor(
+            self.slay_ai_agent, self.training_logger, self.encoding_mapper
+        )
         super().__init__(chosen_class)
 
     def change_class(self, chosen_class: PlayerClass):
         db = EncodingDatabase(chosen_class)
+        db._upsert_tables()
         self.encoding_mapper = EncodingMapper(db)
+        self.interactor = NeuralNetInteractor(
+            self.slay_ai_agent, self.training_logger, self.encoding_mapper
+        )
         return super().change_class(chosen_class)
 
-    def before_action_taken(self):
+    def before_combat_action(self):
         self.interactor.save_game_state(self.game)
         self.interactor.learn_from_action()
 

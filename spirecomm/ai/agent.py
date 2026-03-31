@@ -2,12 +2,36 @@ import random
 import logging
 from abc import ABCMeta, abstractmethod
 
+from spirecomm.ai.priorities import (
+    DefectPowerPriority,
+    IroncladPriority,
+    Priority,
+    SilentPriority,
+)
+from spirecomm.communication.action import (
+    BossRewardAction,
+    BuyCardAction,
+    BuyRelicAction,
+    CancelAction,
+    CardRewardAction,
+    CardSelectAction,
+    ChooseAction,
+    ChooseMapBossAction,
+    ChooseMapNodeAction,
+    ChooseShopkeeperAction,
+    CombatRewardAction,
+    EndTurnAction,
+    OpenChestAction,
+    PlayCardAction,
+    PotionAction,
+    ProceedAction,
+    RestAction,
+    StartGameAction,
+)
 from spirecomm.spire.game import Game
 from spirecomm.spire.character import Intent, PlayerClass
 import spirecomm.spire.card
-from spirecomm.spire.screen import RestOption
-from spirecomm.communication.action import *
-from spirecomm.ai.priorities import *
+from spirecomm.spire.screen import RestOption, RewardType, ScreenType
 
 
 class Agent(metaclass=ABCMeta):
@@ -32,13 +56,12 @@ class Agent(metaclass=ABCMeta):
         logging.info("Getting next game action")
         logging.debug("Using state: " + str(game_state))
 
-        self.before_action_taken()
-
         if self.game.choice_available:
             chosenAction = self.get_screen_action()
         elif self.game.proceed_available:
             chosenAction = ProceedAction()
         elif self.game.play_available:
+            self.before_combat_action()
             chosenAction = self.get_next_combat_action()
         elif self.game.end_available:
             chosenAction = EndTurnAction()
@@ -351,8 +374,8 @@ class Agent(metaclass=ABCMeta):
             return ProceedAction()
 
     @abstractmethod
-    def before_action_taken(self):
-        logging.debug("before_action_taken not set")
+    def before_combat_action(self):
+        logging.debug("before_combat_action not set")
 
     @abstractmethod
     def get_next_combat_action(self):
