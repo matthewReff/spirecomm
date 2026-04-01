@@ -131,3 +131,6 @@ runs/
 # sqlite
 slay-ai
 slay-ai.db
+
+# Local Only
+checkpoints
