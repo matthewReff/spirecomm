@@ -50,6 +50,7 @@ class NnAgent(Agent):
         return super().change_class(chosen_class)
 
     def before_combat_action(self):
+        self.encoding_mapper.scrape_state(self.game)
         self.interactor.save_game_state(self.game)
         self.interactor.learn_from_action()
 
@@ -70,11 +71,9 @@ class NnAgent(Agent):
                 + str(card_index)
                 + "/"
                 + str(len(hand_cards))
-                + " "
-                + str(monster_index)
             )
 
-            if (len(hand_cards) - 1) > card_index:
+            if (len(hand_cards) - 1) < card_index:
                 is_valid_source = False
             else:
                 actual_card: Card = hand_cards[card_index]
@@ -93,14 +92,12 @@ class NnAgent(Agent):
             potions = self.game.potions
             logging.debug(
                 "Got potion action to normalize: "
-                + str(card_index)
+                + str(potion_index)
                 + "/"
                 + str(len(potions))
-                + " "
-                + str(monster_index)
             )
 
-            if (len(potions) - 1) > potion_index:
+            if (len(potions) - 1) < potion_index:
                 is_valid_source = False
             else:
                 actual_potion: Potion = potions[potion_index]
@@ -108,7 +105,13 @@ class NnAgent(Agent):
 
         is_valid_target = None
         monsters = self.game.monsters
-        if (len(monsters) - 1) > monster_index:
+        logging.debug(
+            "Got Monster target to normalize:"
+            + str(monster_index)
+            + "/"
+            + str(len(self.game.monsters))
+        )
+        if (len(monsters) - 1) < monster_index:
             is_valid_target = False
         else:
             actual_monster: Monster = monsters[monster_index]
@@ -124,8 +127,6 @@ class NnAgent(Agent):
         return raw_action
 
     def get_next_combat_action(self) -> Action:
-        self.encoding_mapper.scrape_state(self.game)
-
         raw_action = self.interactor.run_combat(self.game)
 
         # You stayed alive

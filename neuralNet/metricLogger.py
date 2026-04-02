@@ -2,6 +2,7 @@ import numpy as np
 import time
 import datetime
 import matplotlib.pyplot as plt
+import logging
 
 
 class MetricLogger:
@@ -80,16 +81,16 @@ class MetricLogger:
         self.record_time = time.time()
         time_since_last_record = np.round(self.record_time - last_record_time, 3)
 
-        print(
+        logging.info(
             f"Episode {episode} - "
-            f"Step {step} - "
-            f"Epsilon {epsilon} - "
-            f"Mean Reward {mean_ep_reward} - "
-            f"Mean Length {mean_ep_length} - "
-            f"Mean Loss {mean_ep_loss} - "
-            f"Mean Q Value {mean_ep_q} - "
-            f"Time Delta {time_since_last_record} - "
-            f"Time {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
+            + f"Step {step} - "
+            + f"Epsilon {epsilon} - "
+            + f"Mean Reward {mean_ep_reward} - "
+            + f"Mean Length {mean_ep_length} - "
+            + f"Mean Loss {mean_ep_loss} - "
+            + f"Mean Q Value {mean_ep_q} - "
+            + f"Time Delta {time_since_last_record} - "
+            + f"Time {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
         )
 
         with open(self.save_log, "a") as f:

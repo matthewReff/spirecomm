@@ -4,7 +4,7 @@ from neuralNet.network import SlayAiNet
 import torch
 import numpy as np
 from tensordict import TensorDict
-from torchrl.data import TensorDictReplayBuffer, LazyMemmapStorage
+from torchrl.data import TensorDictReplayBuffer, ListStorage
 
 
 class SlayAiAgent:
@@ -23,7 +23,7 @@ class SlayAiAgent:
         # Memory params
         self.save_every = 5e5
         self.memory = TensorDictReplayBuffer(
-            storage=LazyMemmapStorage(100000, device=torch.device("cpu"))
+            storage=ListStorage(100000, device=torch.device("cpu"))
         )
         self.batch_size = 32
 

@@ -58,6 +58,7 @@ class EncodingDatabase:
         self.db_connection.commit()
 
     def save_card(self, name: str):
+        logging.debug("Saving mapping for card " + name)
         self.db_connection.execute(
             'INSERT INTO card(name, player_class) VALUES("{}", "{}") ON CONFLICT(name, player_class) DO NOTHING'.format(
                 name, self.player_class_name
@@ -80,6 +81,7 @@ class EncodingDatabase:
         return result.fetchall()
 
     def save_relic(self, name: str):
+        logging.debug("Saving mapping for relic " + name)
         self.db_connection.execute(
             'INSERT INTO relic(name, player_class) VALUES("{}", "{}") ON CONFLICT(name, player_class) DO NOTHING'.format(
                 name, self.player_class_name
@@ -102,6 +104,7 @@ class EncodingDatabase:
         return result.fetchall()
 
     def save_potion(self, name: str):
+        logging.debug("Saving mapping for potion " + name)
         self.db_connection.execute(
             'INSERT INTO potion(name, player_class) VALUES("{}", "{}") ON CONFLICT(name, player_class) DO NOTHING'.format(
                 name, self.player_class_name
@@ -124,6 +127,7 @@ class EncodingDatabase:
         return result.fetchall()
 
     def save_power(self, name: str):
+        logging.debug("Saving mapping for power " + name)
         self.db_connection.execute(
             'INSERT INTO power(name, player_class) VALUES("{}", "{}") ON CONFLICT(name, player_class) DO NOTHING'.format(
                 name, self.player_class_name
@@ -146,10 +150,9 @@ class EncodingDatabase:
         return result.fetchall()
 
     def save_monster(self, name: str):
+        logging.debug("Saving mapping for monster " + name)
         self.db_connection.execute(
-            'INSERT OR IGNORE INTO monster(name) VALUES("{}") ON CONFLICT(name) DO NOTHING'.format(
-                name
-            )
+            'INSERT INTO monster(name) VALUES("{}")'.format(name)
         )
         self.db_connection.commit()
 
@@ -221,10 +224,17 @@ class EncodingMapper:
 
         all_powers = []
         if playerData is not None:
+            logging.critical("player has " + str(len(playerData.powers)) + " power(s)")
             all_powers = all_powers + [power for power in playerData.powers]
         for monster in monsters:
+            logging.critical(
+                monster.name + " has " + str(len(monster.powers)) + " power(s)"
+            )
             monster_powers = [power for power in monster.powers]
             all_powers = all_powers + monster_powers
+
+        for power in all_powers:
+            logging.critical(power.power_name + power.power_id)
 
         try:
             power: Power

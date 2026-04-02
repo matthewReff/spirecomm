@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch import nn
-
+import logging
 
 # https://docs.pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 
@@ -79,4 +79,4 @@ class SlayAiNet(nn.Module):
             ),
             save_path,
         )
-        print(f"SlayAiNet saved to {save_path} at step {self.curr_step}")
+        logging.info(f"SlayAiNet saved to {save_path} at step {self.curr_step}")

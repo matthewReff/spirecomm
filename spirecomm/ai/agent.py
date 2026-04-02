@@ -54,7 +54,6 @@ class Agent(metaclass=ABCMeta):
         """Determine the next action to take based on the game state"""
         self.game = game_state
         logging.info("Getting next game action")
-        logging.debug("Using state: " + str(game_state))
 
         if self.game.choice_available:
             chosenAction = self.get_screen_action()

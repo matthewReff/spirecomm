@@ -15,9 +15,11 @@ import logging
 import torch
 
 
-def serialize_cards(cards: list[Card], encoding_mapper: EncodingMapper) -> torch.Tensor:
+def serialize_cards(
+    cards: list[Card], encoding_mapper: EncodingMapper, required_size=10
+) -> torch.Tensor:
     serialized_cards = torch.Tensor()
-    REQUIRED_ENTRIES = 10
+    REQUIRED_ENTRIES = required_size
 
     for i, card in enumerate(cards):
         this_card = torch.Tensor(
@@ -197,13 +199,13 @@ def game_state_to_NN_input(
     cards_in_hand = serialize_cards(gameState.hand, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, cards_in_hand))
 
-    discarded_cards = serialize_cards(gameState.discard_pile, encoding_mapper)
+    discarded_cards = serialize_cards(gameState.discard_pile, encoding_mapper, 50)
     game_state_tensor = torch.cat((game_state_tensor, discarded_cards))
 
-    exhausted_cards = serialize_cards(gameState.exhaust_pile, encoding_mapper)
+    exhausted_cards = serialize_cards(gameState.exhaust_pile, encoding_mapper, 25)
     game_state_tensor = torch.cat((game_state_tensor, exhausted_cards))
 
-    deck_cards = serialize_cards(gameState.draw_pile, encoding_mapper)
+    deck_cards = serialize_cards(gameState.draw_pile, encoding_mapper, 50)
     game_state_tensor = torch.cat((game_state_tensor, deck_cards))
 
     enemy_tensor = serialize_monsters(gameState.monsters, encoding_mapper)
@@ -229,7 +231,7 @@ def NN_output_to_action(action_index: int) -> Action:
         return PlayCardAction(card_index=using_index, target_index=target_index)
     # Potion
     elif type == 2:
-        return PotionAction(potion_index=using_index, target_index=target_index)
+        return PotionAction(True, potion_index=using_index, target_index=target_index)
 
     # Todo flag this as an "invalid state" and punish
     return EndTurnAction()
