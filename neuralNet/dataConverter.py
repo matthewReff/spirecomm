@@ -174,7 +174,9 @@ def game_state_to_NN_input(
 
     player_power_tensor = serialize_powers(playerData.powers, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, player_power_tensor))
-    logging.debug("game state tensor size after player power " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after player power " + str(game_state_tensor.size())
+    )
 
     orb_tensor = serialize_orbs(playerData.orbs)
     game_state_tensor = torch.cat((game_state_tensor, orb_tensor))
@@ -185,11 +187,15 @@ def game_state_to_NN_input(
 
     relic_tensor = serialize_relics(gameState.relics, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, relic_tensor))
-    logging.debug("game state tensor size after relics " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after relics " + str(game_state_tensor.size())
+    )
 
     potions_tensor = serialize_potions(gameState.potions, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, potions_tensor))
-    logging.debug("game state tensor size after potions " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after potions " + str(game_state_tensor.size())
+    )
 
     player_current_health = gameState.current_hp
     player_max_health = gameState.max_hp
@@ -198,28 +204,37 @@ def game_state_to_NN_input(
         [player_energy, player_block, player_current_health, player_max_health]
     )
     game_state_tensor = torch.cat((game_state_tensor, player_stats_tensor))
-    logging.debug("game state tensor size after player stats " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after player stats " + str(game_state_tensor.size())
+    )
 
     cards_in_hand = serialize_cards(gameState.hand, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, cards_in_hand))
-    logging.debug("game state tensor size after hand cards " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after hand cards " + str(game_state_tensor.size())
+    )
 
     discarded_cards = serialize_cards(gameState.discard_pile, encoding_mapper, 50)
     game_state_tensor = torch.cat((game_state_tensor, discarded_cards))
-    logging.debug("game state tensor size after discarded cards " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after discarded cards " + str(game_state_tensor.size())
+    )
 
     exhausted_cards = serialize_cards(gameState.exhaust_pile, encoding_mapper, 25)
     game_state_tensor = torch.cat((game_state_tensor, exhausted_cards))
-    logging.debug("game state tensor size after exhausted cards " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after exhausted cards " + str(game_state_tensor.size())
+    )
 
     deck_cards = serialize_cards(gameState.draw_pile, encoding_mapper, 50)
     game_state_tensor = torch.cat((game_state_tensor, deck_cards))
-    logging.debug("game state tensor size after deck cards " + str(game_state_tensor.size()))
+    logging.debug(
+        "game state tensor size after deck cards " + str(game_state_tensor.size())
+    )
 
     enemy_tensor = serialize_monsters(gameState.monsters, encoding_mapper)
     game_state_tensor = torch.cat((game_state_tensor, enemy_tensor))
     logging.debug("game state tensor size after enemy " + str(game_state_tensor.size()))
-
 
     logging.debug("Encoded state into tensor of length " + str(len(game_state_tensor)))
     return game_state_tensor
