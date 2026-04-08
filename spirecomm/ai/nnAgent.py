@@ -23,12 +23,13 @@ class NnAgent(Agent):
     training_logger = None
 
     def __init__(self, chosen_class):
-        self.slay_ai_agent = SlayAiAgent()
-
         save_dir = Path("checkpoints") / datetime.datetime.now().strftime(
             "%Y-%m-%dT%H-%M-%S"
         )
         save_dir.mkdir(parents=True)
+
+        self.slay_ai_agent = SlayAiAgent(save_dir)
+
         self.training_logger = MetricLogger(save_dir)
 
         db = EncodingDatabase(chosen_class)
@@ -85,6 +86,10 @@ class NnAgent(Agent):
                     and actual_card.is_playable
                 )
 
+                # No required target, bypass filtering
+                if not actual_card.has_target and is_valid_source:
+                    return PlayCardAction(card_index=card_action.card_index)
+
         if raw_action.command == "potion":
             potion_action: PotionAction = raw_action
             potion_index = potion_action.potion_index
@@ -102,6 +107,10 @@ class NnAgent(Agent):
             else:
                 actual_potion: Potion = potions[potion_index]
                 is_valid_source = actual_potion.can_use
+
+                # No required target, bypass filtering
+                if not actual_potion.requires_target and is_valid_source:
+                    return PotionAction(True, potion_index=potion_action.potion_index)
 
         is_valid_target = None
         monsters = self.game.monsters

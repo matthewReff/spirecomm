@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 
 from neuralNet.network import SlayAiNet
@@ -5,13 +6,17 @@ import torch
 import numpy as np
 from tensordict import TensorDict
 from torchrl.data import TensorDictReplayBuffer, ListStorage
+import logging
 
 
 class SlayAiAgent:
-    def __init__(self):
+    def __init__(self, save_dir: Path):
         # Generic Setup
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.net = SlayAiNet().float()
+
+        self.batch_size = 32
+
+        self.net = SlayAiNet(save_dir, self.batch_size).float()
         self.net = self.net.to(device=self.device)
 
         # Exploration params
@@ -21,15 +26,17 @@ class SlayAiAgent:
         self.curr_step = 0
 
         # Memory params
-        self.save_every = 5e5
+        # self.save_every = 5e5
+        self.save_every = 1e1
         self.memory = TensorDictReplayBuffer(
             storage=ListStorage(100000, device=torch.device("cpu"))
         )
-        self.batch_size = 32
 
-        self.burnin = 1e4  # min. experiences before training
+        # self.burnin = 1e4  # min. experiences before training
+        self.burnin = 1e1  # min. experiences before training
         self.learn_every = 3  # no. of experiences between updates to Q_online
-        self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
+        # self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
+        self.sync_every = 1e1  # no. of experiences between Q_target & Q_online sync
 
     def randomAction(self) -> int:
         random_action_number = random.randint(0, 10)
@@ -89,6 +96,12 @@ class SlayAiAgent:
         reward = torch.tensor([reward])
         done = torch.tensor([done])
 
+        logging.debug("state tensor " + str(state.size()))
+        logging.debug("next_state tensor " + str(next_state.size()))
+        logging.debug("action tensor " + str(action.size()))
+        logging.debug("reward tensor " + str(reward.size()))
+        logging.debug("done tensor " + str(done.size()))
+
         self.memory.add(
             TensorDict(
                 {
@@ -112,27 +125,43 @@ class SlayAiAgent:
 
     def learn(self):
         if self.curr_step % self.sync_every == 0:
-            self.sync_Q_target()
+            self.net.sync_Q_target()
 
         if self.curr_step % self.save_every == 0:
-            self.save()
+            self.net.save(
+                curr_step=self.curr_step,
+                save_every=self.save_every,
+                exploration_rate=self.exploration_rate,
+            )
 
         if self.curr_step < self.burnin:
+            logging.debug(
+                "Current step is "
+                + str(self.curr_step)
+                + ", will start learning after "
+                + str(self.burnin)
+            )
             return None, None
 
         if self.curr_step % self.learn_every != 0:
+            logging.debug(
+                "Current step is "
+                + str(self.curr_step)
+                + ", skipping since step is not a multiple of "
+                + str(self.learn_every)
+            )
             return None, None
 
         # Sample from memory
         state, next_state, action, reward, done = self.recall()
 
         # Get TD Estimate
-        td_est = self.td_estimate(state, action)
+        td_est = self.net.td_estimate(state, action)
 
         # Get TD Target
-        td_tgt = self.td_target(reward, next_state, done)
+        td_tgt = self.net.td_target(reward, next_state, done)
 
         # Backpropagate loss through Q_online
-        loss = self.update_Q_online(td_est, td_tgt)
+        loss = self.net.update_Q_online(td_est, td_tgt)
 
         return (td_est.mean().item(), loss)

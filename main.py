@@ -2,6 +2,7 @@ import random
 import time
 import os
 import logging
+from pathlib import Path
 
 from spirecomm.ai.nnAgent import NnAgent
 from spirecomm.communication.coordinator import Coordinator
@@ -57,17 +58,17 @@ def copy_run_files(results, chosenClass, folder_name):
 
     logging.info("Creating runs folder in mod folder")
     try:
-        os.mkdir(mod_runs_path)
-        logging.info("Created path: " + mod_runs_path, "continuing...")
+        Path(mod_runs_path).mkdir(parents=True, exist_ok=True)
+        logging.debug("Created path: " + mod_runs_path, "continuing...")
     except FileExistsError:
-        logging.info("Path already exists: " + mod_runs_path, "continuing...")
+        logging.debug("Path already exists: " + mod_runs_path, "continuing...")
 
     logging.info("Creating specific run folder in mod runs folder")
     try:
-        os.mkdir(mod_specific_runs_path)
-        logging.info("Created path: " + mod_specific_runs_path, "continuing...")
+        Path(mod_specific_runs_path).mkdir(parents=True, exist_ok=True)
+        logging.debug("Created path: " + mod_specific_runs_path, "continuing...")
     except FileExistsError:
-        logging.info("Path already exists: " + mod_specific_runs_path, "continuing...")
+        logging.debug("Path already exists: " + mod_specific_runs_path, "continuing...")
 
     try:
         logging.info("Copying from game runs folder to mod runs folder")

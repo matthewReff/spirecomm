@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 import numpy as np
 from torch import nn
@@ -7,8 +9,13 @@ import logging
 
 
 class SlayAiNet(nn.Module):
-    def __init__(self):
+    save_dir = None
+
+    def __init__(self, save_dir: Path, batch_size: int):
         super().__init__()
+        self.save_dir = save_dir
+        self.batch_size = batch_size
+
         self.online = self.__build_nn()
 
         self.target = self.__build_nn()
@@ -23,6 +30,7 @@ class SlayAiNet(nn.Module):
         self.loss_fn = torch.nn.SmoothL1Loss()
 
     def forward(self, input, model):
+        logging.debug("Doing forward prop " + str(input.size()))
         if model == "online":
             return self.online(input)
         elif model == "target":
@@ -30,30 +38,31 @@ class SlayAiNet(nn.Module):
 
     def __build_nn(self):
         return nn.Sequential(
-            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=8),
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=8),
             nn.ReLU(),
-            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=4),
+            nn.Conv1d(in_channels=32, out_channels=64, kernel_size=6),
             nn.ReLU(),
-            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=3),
+            nn.Conv1d(in_channels=64, out_channels=128, kernel_size=4),
             nn.ReLU(),
-            nn.Conv1d(in_channels=1024, out_channels=1024, kernel_size=2),
+            nn.Conv1d(in_channels=128, out_channels=32, kernel_size=2),
             nn.ReLU(),
-            nn.Conv1d(in_channels=1024, out_channels=512, kernel_size=1),
+            nn.Linear(1018, 512),
             nn.ReLU(),
             nn.Linear(512, 299),
         )
 
     def td_estimate(self, state, action):
-        current_Q = self.forward(state, model="online")[
+        logging.debug("td_estimate " + str(action.size()))
+        current_Q = self(state, model="online")[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a)
         return current_Q
 
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
-        next_state_Q = self.forward(next_state, model="online")
+        next_state_Q = self(next_state, model="online")
         best_action = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.forward(next_state, model="target")[
+        next_Q = self(next_state, model="target")[
             np.arange(0, self.batch_size), best_action
         ]
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
@@ -68,15 +77,10 @@ class SlayAiNet(nn.Module):
     def sync_Q_target(self):
         self.target.load_state_dict(self.online.state_dict())
 
-    def save(self):
-        save_path = (
-            self.save_dir
-            / f"slay_ai_net_{int(self.curr_step // self.save_every)}.chkpt"
-        )
+    def save(self, curr_step: int, save_every: int, exploration_rate: int):
+        save_path = self.save_dir / f"slay_ai_net_{int(curr_step // save_every)}.chkpt"
         torch.save(
-            dict(
-                model=self.online.state_dict(), exploration_rate=self.exploration_rate
-            ),
+            dict(model=self.online.state_dict(), exploration_rate=exploration_rate),
             save_path,
         )
-        logging.info(f"SlayAiNet saved to {save_path} at step {self.curr_step}")
+        logging.info(f"SlayAiNet saved to {save_path} at step {curr_step}")

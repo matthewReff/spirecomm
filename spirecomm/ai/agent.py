@@ -66,7 +66,7 @@ class Agent(metaclass=ABCMeta):
             chosenAction = EndTurnAction()
         elif self.game.cancel_available:
             chosenAction = CancelAction()
-        logging.info("Using next game action: " + str(chosenAction))
+        logging.info("Using next game action: " + str(chosenAction.command))
         return chosenAction
 
     def get_next_action_out_of_game(self):

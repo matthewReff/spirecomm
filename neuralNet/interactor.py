@@ -43,12 +43,14 @@ class NeuralNetInteractor:
             return
 
         self.ai_agent.cache(
-            game_state_to_NN_input(self.last_game_state, self.encoding_mapper),
-            game_state_to_NN_input(self.current_game_state, self.encoding_mapper),
-            self.last_action,
-            self.reward_since_last,
-            0,
-        )  # TODO fix done attribute
+            state=game_state_to_NN_input(self.last_game_state, self.encoding_mapper),
+            next_state=game_state_to_NN_input(
+                self.current_game_state, self.encoding_mapper
+            ),
+            action=self.last_action,
+            reward=self.reward_since_last,
+            done=0,  # TODO fix done attribute
+        )
 
         # Learn
         q, loss = self.ai_agent.learn()
