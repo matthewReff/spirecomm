@@ -11,7 +11,7 @@ from spirecomm.spire.character import PlayerClass
 
 
 def main():
-    logging.basicConfig(filename="neuralNet.log", level=logging.DEBUG)
+    logging.basicConfig(filename="neuralNet.log", level=logging.INFO)
     agent: Agent = NnAgent(PlayerClass.DEFECT)
     coordinator = Coordinator()
     coordinator.signal_ready()

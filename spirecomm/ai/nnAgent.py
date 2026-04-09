@@ -55,6 +55,22 @@ class NnAgent(Agent):
         self.interactor.save_game_state(self.game)
         self.interactor.learn_from_action()
 
+    def after_game_end(self):
+        logging.debug("after_game_end called")
+        self.training_logger.log_episode()
+
+        # Log episode stuff sometimes
+        current_episode = self.slay_ai_agent.curr_episode
+        if (current_episode % 1 == 0) or (
+            current_episode == self.slay_ai_agent.max_episodes - 1
+        ):  # TODO adjust back after testing
+            self.training_logger.record(
+                episode=current_episode,
+                epsilon=self.slay_ai_agent.exploration_rate,
+                step=self.slay_ai_agent.curr_step,
+            )
+        self.slay_ai_agent.curr_episode = self.slay_ai_agent.curr_episode + 1
+
     def normalize_combat_action(self, raw_action: Action) -> Action:
         if raw_action.command == "end":
             logging.debug("Got end turn action to normalize")
@@ -129,7 +145,7 @@ class NnAgent(Agent):
         is_invalid_action = not is_valid_target or not is_valid_source
         if is_invalid_action:
             # Took an impossible action, not cool buddy
-            self.interactor.grant_reward(-0.5)
+            # self.interactor.grant_reward(-0.5)
 
             return EndTurnAction()
 
@@ -138,7 +154,7 @@ class NnAgent(Agent):
     def get_next_combat_action(self) -> Action:
         raw_action = self.interactor.run_combat(self.game)
 
-        # You stayed alive
+        # You stayed alive, that's nice
         self.interactor.grant_reward(0.1)
 
         return self.normalize_combat_action(raw_action)
@@ -162,11 +178,13 @@ class NnAgent(Agent):
     def get_next_combat_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
 
+        # Winning a combat is good
         self.interactor.grant_reward(1)
         return super().get_next_combat_reward_action()
 
     def get_next_boss_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
 
+        # Killing a boss is very good
         self.interactor.grant_reward(10)
         return super().get_next_boss_reward_action()

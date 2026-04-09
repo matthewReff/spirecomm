@@ -224,12 +224,8 @@ class EncodingMapper:
 
         all_powers = []
         if playerData is not None:
-            logging.critical("player has " + str(len(playerData.powers)) + " power(s)")
             all_powers = all_powers + [power for power in playerData.powers]
         for monster in monsters:
-            logging.critical(
-                monster.name + " has " + str(len(monster.powers)) + " power(s)"
-            )
             monster_powers = [power for power in monster.powers]
             all_powers = all_powers + monster_powers
 

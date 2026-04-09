@@ -24,6 +24,8 @@ class SlayAiAgent:
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
         self.curr_step = 0
+        self.curr_episode = 0
+        self.max_episodes = 999999  # TODO add actual stopping after specific episode
 
         # Memory params
         # self.save_every = 5e5
@@ -40,8 +42,8 @@ class SlayAiAgent:
 
     def randomAction(self) -> int:
         random_action_number = random.randint(0, 10)
-        random_using_index = random.randint(0, 10)
-        random_target_index = random.randint(0, 10)
+        random_using_index = random.randint(0, 9)
+        random_target_index = random.randint(0, 9)
 
         # 10% change of ending turn, 10% chance of potion, 80% chance of using card
         action_type = 0
@@ -98,7 +100,7 @@ class SlayAiAgent:
 
         logging.debug("state tensor " + str(state.size()))
         logging.debug("next_state tensor " + str(next_state.size()))
-        logging.debug("action tensor " + str(action.size()))
+        logging.debug("action tensor " + str(action) + " " + str(action.size()))
         logging.debug("reward tensor " + str(reward.size()))
         logging.debug("done tensor " + str(done.size()))
 

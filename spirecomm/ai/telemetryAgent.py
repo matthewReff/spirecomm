@@ -20,6 +20,9 @@ class TelemetryAgent(Agent):
     def before_combat_action(self):
         return super().before_combat_action()
 
+    def after_game_end(self):
+        return super().after_game_end()
+
     def get_next_combat_action(self):
         self.encoding_mapper.scrape_state(self.game)
         return super().get_next_combat_action()

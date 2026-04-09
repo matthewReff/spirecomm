@@ -241,7 +241,7 @@ def game_state_to_NN_input(
 
 
 # Translate NN output format to readable game state
-# Output is is (299,)
+# Output is is (300,)
 def NN_output_to_action(action_index: int) -> Action:
     type = action_index // 100
     action_index = action_index % 100

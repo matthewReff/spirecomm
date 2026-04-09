@@ -48,11 +48,11 @@ class SlayAiNet(nn.Module):
             nn.ReLU(),
             nn.Linear(1018, 512),
             nn.ReLU(),
-            nn.Linear(512, 299),
+            nn.Linear(512, 300),
         )
 
     def td_estimate(self, state, action):
-        logging.debug("td_estimate " + str(action.size()))
+        logging.debug("td_estimate " + str(action) + " " + str(action.size()))
         current_Q = self(state, model="online")[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a)
