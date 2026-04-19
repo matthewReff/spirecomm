@@ -15,30 +15,50 @@ class SlayAiAgent:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.batch_size = 32
+        self.state_size = 1034
+        self.action_size = 300
 
-        self.net = SlayAiNet(save_dir, self.batch_size).float()
+        self.net = SlayAiNet(
+            save_dir=save_dir,
+            batch_size=self.batch_size,
+            state_size=self.state_size,
+            action_size=self.action_size,
+        ).float()
         self.net = self.net.to(device=self.device)
 
         # Exploration params
         self.exploration_rate = 1
-        self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
+        BASE_DECAY_RATE = 0.99999975
+        SPEEDUP_FACTOR = 1e2  # Between 1e0 and 1e4
+        # Given a speedup factor, reach the exploration min N times faster
+        NUMBER_OF_STEPS_TO_REACH_ORIGINAL = np.log(self.exploration_rate_min) / np.log(
+            BASE_DECAY_RATE
+        )
+        NUMBER_OF_STEPS_TO_REACH_SPED_UP = (
+            NUMBER_OF_STEPS_TO_REACH_ORIGINAL / SPEEDUP_FACTOR
+        )
+        DECAY_RATE = np.pow(
+            self.exploration_rate_min, 1 / NUMBER_OF_STEPS_TO_REACH_SPED_UP
+        )
+
+        self.exploration_rate_decay = DECAY_RATE
+
         self.curr_step = 0
         self.curr_episode = 0
         self.max_episodes = 999999  # TODO add actual stopping after specific episode
 
         # Memory params
-        # self.save_every = 5e5
-        self.save_every = 1e1
+        self.save_every = 5e5 // SPEEDUP_FACTOR
         self.memory = TensorDictReplayBuffer(
             storage=ListStorage(100000, device=torch.device("cpu"))
         )
 
-        # self.burnin = 1e4  # min. experiences before training
-        self.burnin = 1e1  # min. experiences before training
+        self.burnin = 1e4 // SPEEDUP_FACTOR  # min. experiences before training
         self.learn_every = 3  # no. of experiences between updates to Q_online
-        # self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
-        self.sync_every = 1e1  # no. of experiences between Q_target & Q_online sync
+        self.sync_every = (
+            1e4 // SPEEDUP_FACTOR
+        )  # no. of experiences between Q_target & Q_online sync
 
     def randomAction(self) -> int:
         random_action_number = random.randint(0, 10)
@@ -57,18 +77,15 @@ class SlayAiAgent:
         encodedIndex = (
             (action_type * 100) + (random_using_index * 10) + random_target_index
         )
+        logging.debug("Taking a random action " + str(encodedIndex))
         return encodedIndex
 
     def optimalAction(self, game_state: torch.Tensor) -> int:
-        game_state = (
-            game_state[0].__array__()
-            if isinstance(game_state, tuple)
-            else game_state.__array__()
-        )
         game_state = torch.tensor(game_state, device=self.device).unsqueeze(0)
         action_values = self.net(game_state, model="online")
         action_index = torch.argmax(action_values, axis=1).item()
 
+        logging.debug("Determining an optimal action " + str(action_index))
         return action_index
 
     def act(self, game_state):

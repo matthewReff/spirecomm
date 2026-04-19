@@ -14,6 +14,7 @@ class NeuralNetInteractor:
     current_game_state = None
     last_game_state = None
     last_action = None
+    done = 0
     reward_since_last = 0
 
     def __init__(
@@ -49,7 +50,7 @@ class NeuralNetInteractor:
             ),
             action=self.last_action,
             reward=self.reward_since_last,
-            done=0,  # TODO fix done attribute
+            done=self.done,  # TODO fix done attribute
         )
 
         # Learn
@@ -65,3 +66,6 @@ class NeuralNetInteractor:
 
     def grant_reward(self, reward_amount: int):
         self.reward_since_last = self.reward_since_last + reward_amount
+
+    def set_done(self, done: int):
+        self.done = done

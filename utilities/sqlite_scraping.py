@@ -229,9 +229,6 @@ class EncodingMapper:
             monster_powers = [power for power in monster.powers]
             all_powers = all_powers + monster_powers
 
-        for power in all_powers:
-            logging.critical(power.power_name + power.power_id)
-
         try:
             power: Power
             for power in all_powers:

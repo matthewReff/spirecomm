@@ -11,14 +11,18 @@ import logging
 class SlayAiNet(nn.Module):
     save_dir = None
 
-    def __init__(self, save_dir: Path, batch_size: int):
+    def __init__(
+        self, save_dir: Path, batch_size: int, state_size: int, action_size: int
+    ):
         super().__init__()
         self.save_dir = save_dir
         self.batch_size = batch_size
+        self.state_size = state_size
+        self.action_size = action_size
 
-        self.online = self.__build_nn()
+        self.online = self.__build_nn(self.state_size, self.action_size)
 
-        self.target = self.__build_nn()
+        self.target = self.__build_nn(self.state_size, self.action_size)
         self.target.load_state_dict(self.online.state_dict())
 
         # Q_target parameters are frozen.
@@ -26,7 +30,10 @@ class SlayAiNet(nn.Module):
             p.requires_grad = False
 
         self.gamma = 0.9
-        self.optimizer = torch.optim.Adam(self.online.parameters(), lr=0.00025)
+        self.learning_rate = 0.00025
+        self.optimizer = torch.optim.Adam(
+            self.online.parameters(), lr=self.learning_rate
+        )
         self.loss_fn = torch.nn.SmoothL1Loss()
 
     def forward(self, input, model):
@@ -36,19 +43,19 @@ class SlayAiNet(nn.Module):
         elif model == "target":
             return self.target(input)
 
-    def __build_nn(self):
+    def __build_nn(self, state_dim, action_dim):
         return nn.Sequential(
-            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=8),
+            nn.Linear(state_dim, 250),
             nn.ReLU(),
-            nn.Conv1d(in_channels=32, out_channels=64, kernel_size=6),
+            nn.Linear(250, 250),
             nn.ReLU(),
-            nn.Conv1d(in_channels=64, out_channels=128, kernel_size=4),
+            nn.Linear(250, 250),
             nn.ReLU(),
-            nn.Conv1d(in_channels=128, out_channels=32, kernel_size=2),
+            nn.Linear(250, 250),
             nn.ReLU(),
-            nn.Linear(1018, 512),
+            nn.Linear(250, 250),
             nn.ReLU(),
-            nn.Linear(512, 300),
+            nn.Linear(250, action_dim),
         )
 
     def td_estimate(self, state, action):

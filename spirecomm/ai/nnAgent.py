@@ -27,6 +27,7 @@ class NnAgent(Agent):
             "%Y-%m-%dT%H-%M-%S"
         )
         save_dir.mkdir(parents=True)
+        self.log_every = 10
 
         self.slay_ai_agent = SlayAiAgent(save_dir)
 
@@ -61,9 +62,9 @@ class NnAgent(Agent):
 
         # Log episode stuff sometimes
         current_episode = self.slay_ai_agent.curr_episode
-        if (current_episode % 1 == 0) or (
+        if (current_episode % self.log_every == 0) or (
             current_episode == self.slay_ai_agent.max_episodes - 1
-        ):  # TODO adjust back after testing
+        ):
             self.training_logger.record(
                 episode=current_episode,
                 epsilon=self.slay_ai_agent.exploration_rate,
@@ -154,8 +155,8 @@ class NnAgent(Agent):
     def get_next_combat_action(self) -> Action:
         raw_action = self.interactor.run_combat(self.game)
 
-        # You stayed alive, that's nice
-        self.interactor.grant_reward(0.1)
+        # You stayed alive, that's nice. But you need to actually DO something
+        self.interactor.grant_reward(-0.1)
 
         return self.normalize_combat_action(raw_action)
 
@@ -179,12 +180,12 @@ class NnAgent(Agent):
         self.encoding_mapper.scrape_state(self.game)
 
         # Winning a combat is good
-        self.interactor.grant_reward(1)
+        self.interactor.grant_reward(0.1)
         return super().get_next_combat_reward_action()
 
     def get_next_boss_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
 
         # Killing a boss is very good
-        self.interactor.grant_reward(10)
+        self.interactor.grant_reward(1)
         return super().get_next_boss_reward_action()
