@@ -4,6 +4,7 @@ from neuralNet.metricLogger import MetricLogger
 from spirecomm.spire.game import Game
 from spirecomm.communication.action import Action
 from neuralNet.dataConverter import NN_output_to_action, game_state_to_NN_input
+import numpy as np
 
 
 class NeuralNetInteractor:
@@ -43,14 +44,15 @@ class NeuralNetInteractor:
         if self.last_game_state is None or self.current_game_state is None:
             return
 
+        normalized_reward = np.clip(self.reward_since_last, -1, 1)
         self.ai_agent.cache(
             state=game_state_to_NN_input(self.last_game_state, self.encoding_mapper),
             next_state=game_state_to_NN_input(
                 self.current_game_state, self.encoding_mapper
             ),
             action=self.last_action,
-            reward=self.reward_since_last,
-            done=self.done,  # TODO fix done attribute
+            reward=normalized_reward,
+            done=self.done,
         )
 
         # Learn

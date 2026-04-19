@@ -72,6 +72,13 @@ class NnAgent(Agent):
             )
         self.slay_ai_agent.curr_episode = self.slay_ai_agent.curr_episode + 1
 
+    def after_game_won(self):
+        self.interactor.set_done(1)
+
+    def before_game_start(self):
+        self.interactor.set_done(0)
+        self.interactor.reset_reward()
+
     def normalize_combat_action(self, raw_action: Action) -> Action:
         if raw_action.command == "end":
             logging.debug("Got end turn action to normalize")
@@ -156,7 +163,7 @@ class NnAgent(Agent):
         raw_action = self.interactor.run_combat(self.game)
 
         # You stayed alive, that's nice. But you need to actually DO something
-        self.interactor.grant_reward(-0.1)
+        self.interactor.grant_reward(-0.01)
 
         return self.normalize_combat_action(raw_action)
 
@@ -176,6 +183,7 @@ class NnAgent(Agent):
         self.encoding_mapper.scrape_state(self.game)
         return super().get_map_choice_action()
 
+    # TODO fix reward being granted multiple times
     def get_next_combat_reward_action(self):
         self.encoding_mapper.scrape_state(self.game)
 
@@ -187,5 +195,5 @@ class NnAgent(Agent):
         self.encoding_mapper.scrape_state(self.game)
 
         # Killing a boss is very good
-        self.interactor.grant_reward(1)
+        self.interactor.grant_reward(0.5)
         return super().get_next_boss_reward_action()

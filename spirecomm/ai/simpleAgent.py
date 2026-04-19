@@ -18,6 +18,12 @@ class SimpleAgent(Agent):
     def after_game_end(self):
         return super().after_game_end()
 
+    def after_game_won(self):
+        return super().after_game_end()
+
+    def before_game_start(self):
+        return super().before_game_start()
+
     def get_card_reward_action(self):
         return super().get_card_reward_action()
 

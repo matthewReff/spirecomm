@@ -60,6 +60,7 @@ class Agent(metaclass=ABCMeta):
             return ProceedAction()
         if self.game.screen_type == ScreenType.COMPLETE:
             self.after_game_end()
+            self.after_game_won()
             return ProceedAction()
         elif self.game.choice_available:
             chosenAction = self.get_screen_action()
@@ -77,6 +78,7 @@ class Agent(metaclass=ABCMeta):
 
     def get_next_action_out_of_game(self):
         """Return the StartGameAction"""
+        self.before_game_start()
         return StartGameAction(self.chosen_class)
 
     def __get_incoming_damage(self):
@@ -385,6 +387,14 @@ class Agent(metaclass=ABCMeta):
     @abstractmethod
     def after_game_end(self):
         logging.debug("after_game_end not set")
+
+    @abstractmethod
+    def after_game_won(self):
+        logging.debug("after_game_won not set")
+
+    @abstractmethod
+    def before_game_start(self):
+        logging.debug("before_game_start not set")
 
     @abstractmethod
     def get_next_combat_action(self):
