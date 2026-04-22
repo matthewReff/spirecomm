@@ -1,3 +1,5 @@
+from enum import Enum
+
 from utilities.sqlite_scraping import EncodingMapper
 from spirecomm.spire.card import Card
 from spirecomm.spire.potion import Potion
@@ -242,22 +244,25 @@ def game_state_to_NN_input(
 
 # Translate NN output format to readable game state
 # Output is is (300,)
+class ACTION_ENCODING(Enum):
+    END_TURN = 0
+    PLAY_CARD = 1
+    USE_POTION = 2
+
+
 def NN_output_to_action(action_index: int) -> Action:
-    type = action_index // 100
+    type = ACTION_ENCODING(action_index // 100)
     action_index = action_index % 100
 
     using_index = action_index // 10
     action_index = action_index % 10
     target_index = action_index
 
-    if type == 0:
+    if type == ACTION_ENCODING.END_TURN:
         return EndTurnAction()
-    # Card
-    elif type == 1:
+    elif type == ACTION_ENCODING.PLAY_CARD:
         return PlayCardAction(card_index=using_index, target_index=target_index)
-    # Potion
-    elif type == 2:
+    elif type == ACTION_ENCODING.USE_POTION:
         return PotionAction(True, potion_index=using_index, target_index=target_index)
 
-    # Todo flag this as an "invalid state" and punish
     return EndTurnAction()

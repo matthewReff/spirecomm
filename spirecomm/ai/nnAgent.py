@@ -5,6 +5,7 @@ from spirecomm.communication.action import (
     EndTurnAction,
     PlayCardAction,
     PotionAction,
+    SmokeBombAction,
 )
 from neuralNet.metricLogger import MetricLogger
 from utilities.sqlite_scraping import EncodingDatabase, EncodingMapper
@@ -134,7 +135,13 @@ class NnAgent(Agent):
 
                 # No required target, bypass filtering
                 if not actual_potion.requires_target and is_valid_source:
-                    return PotionAction(True, potion_index=potion_action.potion_index)
+                    targetless_potion_action = PotionAction(
+                        True, potion_index=potion_action.potion_index
+                    )
+                    if actual_potion.name == "Smoke Bomb":
+                        return SmokeBombAction(targetless_potion_action)
+                    else:
+                        return targetless_potion_action
 
         is_valid_target = None
         monsters = self.game.monsters

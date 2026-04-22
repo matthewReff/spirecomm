@@ -1,6 +1,8 @@
 from pathlib import Path
 import random
 
+from neuralNet.dataConverter import ACTION_ENCODING
+from spirecomm.spire.game import Game
 from neuralNet.network import SlayAiNet
 import torch
 import numpy as np
@@ -30,7 +32,7 @@ class SlayAiAgent:
         self.exploration_rate = 1
         self.exploration_rate_min = 0.1
         BASE_DECAY_RATE = 0.99999975
-        SPEEDUP_FACTOR = 1e2  # Between 1e0 and 1e4
+        SPEEDUP_FACTOR = 1e1  # Between 1e0 and 1e4
         # Given a speedup factor, reach the exploration min N times faster
         NUMBER_OF_STEPS_TO_REACH_ORIGINAL = np.log(self.exploration_rate_min) / np.log(
             BASE_DECAY_RATE
@@ -60,24 +62,50 @@ class SlayAiAgent:
             1e4 // SPEEDUP_FACTOR
         )  # no. of experiences between Q_target & Q_online sync
 
-    def randomAction(self) -> int:
-        random_action_number = random.randint(0, 10)
+    def _true_random_action(self) -> int:
         random_using_index = random.randint(0, 9)
         random_target_index = random.randint(0, 9)
 
         # 10% change of ending turn, 10% chance of potion, 80% chance of using card
-        action_type = 0
-        if random_action_number == 1:
-            action_type = 2
-        elif 1 < random_action_number <= 9:
-            action_type = 1
-        else:
-            pass
+        action_options = [
+            ACTION_ENCODING.END_TURN,
+            ACTION_ENCODING.USE_POTION,
+            *(ACTION_ENCODING.PLAY_CARD for _ in range(8)),
+        ]
+        action_type = random.choice(action_options)
 
         encodedIndex = (
-            (action_type * 100) + (random_using_index * 10) + random_target_index
+            (action_type.value * 100) + (random_using_index * 10) + random_target_index
         )
-        logging.debug("Taking a random action " + str(encodedIndex))
+        logging.debug("Taking a true random action " + str(encodedIndex))
+        return encodedIndex
+
+    # Put on some training wheels and at least try to play actual cards
+    def assisted_random_action(self, game_state: Game) -> int:
+        monster_count = len(game_state.monsters)
+        # Intentionally don't filter down to just playable potions
+        potion_count = len(game_state.potions)
+        # Intentionally don't filter down to just playable cards
+        card_count = len(game_state.hand)
+
+        # 10% change of ending turn, 10% chance of potion, 80% chance of using card
+        action_options = [
+            ACTION_ENCODING.END_TURN,
+            ACTION_ENCODING.USE_POTION,
+            *(ACTION_ENCODING.PLAY_CARD for _ in range(8)),
+        ]
+        action_type = random.choice(action_options)
+
+        using_index = 0
+        target_index = random.randrange(0, monster_count)
+        if action_type == ACTION_ENCODING.PLAY_CARD:
+            using_index = random.randrange(0, card_count)
+
+        if action_type == ACTION_ENCODING.USE_POTION:
+            using_index = random.randrange(0, potion_count)
+
+        encodedIndex = (action_type.value * 100) + (using_index * 10) + target_index
+        logging.debug("Taking an assisted random action " + str(encodedIndex))
         return encodedIndex
 
     def optimalAction(self, game_state: torch.Tensor) -> int:
@@ -88,13 +116,13 @@ class SlayAiAgent:
         logging.debug("Determining an optimal action " + str(action_index))
         return action_index
 
-    def act(self, game_state):
+    def act(self, encoded_game_state: torch.Tensor, raw_game_state: Game):
         should_explore = np.random.rand() < self.exploration_rate
 
         if should_explore:
-            action_index = self.randomAction()
+            action_index = self.assisted_random_action(raw_game_state)
         else:
-            action_index = self.optimalAction(game_state)
+            action_index = self.optimalAction(encoded_game_state)
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
@@ -115,11 +143,7 @@ class SlayAiAgent:
         reward = torch.tensor([reward])
         done = torch.tensor([done])
 
-        logging.debug("state tensor " + str(state.size()))
-        logging.debug("next_state tensor " + str(next_state.size()))
-        logging.debug("action tensor " + str(action) + " " + str(action.size()))
-        logging.debug("reward tensor " + str(reward.size()))
-        logging.debug("done tensor " + str(done.size()))
+        logging.info("Reward during cache " + str(reward))
 
         self.memory.add(
             TensorDict(

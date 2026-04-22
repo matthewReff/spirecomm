@@ -28,10 +28,10 @@ class NeuralNetInteractor:
         self.metrics_logger = metrics_logger
         self.encoding_mapper = encoding_mapper
 
-    def run_combat(self, gameState: Game) -> Action:
-        nn_state = game_state_to_NN_input(gameState, self.encoding_mapper)
+    def run_combat(self, game_state: Game) -> Action:
+        encoded_game_state = game_state_to_NN_input(game_state, self.encoding_mapper)
 
-        nnAction = self.ai_agent.act(nn_state)
+        nnAction = self.ai_agent.act(encoded_game_state, game_state)
         self.last_action = nnAction
 
         return NN_output_to_action(nnAction)

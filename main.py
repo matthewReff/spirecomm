@@ -12,7 +12,7 @@ from spirecomm.spire.character import PlayerClass
 
 def main():
     logging.basicConfig(filename="neuralNet.log", level=logging.INFO)
-    agent: Agent = NnAgent(PlayerClass.DEFECT)
+    agent: Agent = NnAgent(PlayerClass.IRONCLAD)
     coordinator = Coordinator()
     coordinator.signal_ready()
     coordinator.register_command_error_callback(agent.handle_error)
@@ -20,7 +20,7 @@ def main():
     coordinator.register_out_of_game_callback(agent.get_next_action_out_of_game)
 
     # We're running an AI, it doesn't make sense to play anything other than defect
-    chosenClass = PlayerClass.DEFECT
+    chosenClass = PlayerClass.IRONCLAD
     agent.change_class(chosenClass)
     while True:
         seed = str(int(time.time()))

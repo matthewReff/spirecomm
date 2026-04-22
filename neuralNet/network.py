@@ -29,7 +29,7 @@ class SlayAiNet(nn.Module):
         for p in self.target.parameters():
             p.requires_grad = False
 
-        self.gamma = 0.9
+        self.gamma = 0.99
         self.learning_rate = 0.00025
         self.optimizer = torch.optim.Adam(
             self.online.parameters(), lr=self.learning_rate

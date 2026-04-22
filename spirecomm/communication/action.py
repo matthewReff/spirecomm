@@ -29,6 +29,17 @@ class Action:
         coordinator.send_message(self.command)
 
 
+class WaitAction(Action):
+    """An action to wait instead of doing anything"""
+
+    def __init__(self, frames_to_wait):
+        super().__init__("wait")
+        self.frames_to_wait = frames_to_wait
+
+    def execute(self, coordinator):
+        coordinator.send_message("{} {}".format(self.command, self.frames_to_wait))
+
+
 class PlayCardAction(Action):
     """An action to play a specified card from your hand"""
 
@@ -86,6 +97,19 @@ class PotionAction(Action):
         if self.target_index is not None:
             arguments.append(str(self.target_index))
         coordinator.send_message(" ".join(arguments))
+
+
+class SmokeBombAction(Action):
+    """A special case potion action. Because an animation plays after casting smoke bomb, we need to prevent actions until the proceed action is available"""
+
+    def __init__(self, original_potion_action: PotionAction):
+        super().__init__("smoke")
+        self.original_potion_action = original_potion_action
+
+    def execute(self, coordinator):
+        coordinator.add_action_to_queue(WaitAction(150))
+        coordinator.add_action_to_queue(ProceedAction())
+        self.original_potion_action.execute(coordinator)
 
 
 class EndTurnAction(Action):
