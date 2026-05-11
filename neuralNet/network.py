@@ -102,7 +102,8 @@ class SlayAiNet(nn.Module):
         params: MetaParameters,
         training_state: TrainingState,
     ):
-        save_slice = self.save_dir / f"int({curr_step // save_every})"
+        save_slice = self.save_dir / f"{int(curr_step // save_every)}"
+        Path(save_slice).mkdir(parents=True, exist_ok=True)
 
         checkpoint_path = save_slice / "slay_ai_net.chkpt"
         torch.save(
@@ -115,12 +116,12 @@ class SlayAiNet(nn.Module):
         torch.save(dict(model=self.optimizer.state_dict()), optimizer_path)
 
         memory_path = save_slice / "memory.dat"
-        memory.dumps(memory_path)
+        torch.save(dict(model=memory.state_dict()), memory_path)
 
         parameters_path = save_slice / "params.json"
         with open(parameters_path, "w") as file:
-            json.dump(params, file)
+            json.dump(params.__dict__, file)
 
         state_path = save_slice / "state.json"
         with open(state_path, "w") as file:
-            json.dump(training_state, file)
+            json.dump(training_state.__dict__, file)

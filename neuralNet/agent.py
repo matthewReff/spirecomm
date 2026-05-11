@@ -76,6 +76,7 @@ class SlayAiAgent:
 
         self.exploration_rate_decay = self.meta_params.BASE_DECAY_RATE
         self.exploration_rate_min = self.meta_params.EXPLORATION_RATE_MIN
+        self.max_episodes = self.meta_params.MAX_EPISODES
         self.burnin = self.meta_params.BURN_IN
         self.save_every = self.meta_params.SAVE_EVERY
         self.sync_every = self.meta_params.SYNC_EVERY
@@ -215,7 +216,7 @@ class SlayAiAgent:
                 exploration_rate=self.exploration_rate,
                 memory=self.memory,
                 params=self.meta_params,
-                state=current_training_state,
+                training_state=current_training_state,
             )
 
         if self.curr_step < self.burnin:
