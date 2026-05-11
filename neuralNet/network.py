@@ -4,15 +4,28 @@ from neuralNet.configurationData import MetaParameters, TrainingState
 import torch
 import numpy as np
 from torch import nn
+import torch.serialization
 import logging
 from torchrl.data import TensorDictReplayBuffer
 import json
+
+torch.serialization.add_safe_globals(
+    [
+        (np._core.multiarray.scalar, "numpy.core.multiarray.scalar"),
+        np.core.multiarray.scalar,
+        np.dtype,
+        np.dtypes.Float64DType,
+    ]
+)
 
 # https://docs.pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 
 
 class SlayAiNet(nn.Module):
     save_dir = None
+    CHECKPOINT_FILENAME = "slay_ai.chkpt"
+    PARAMS_FILENAME = "params.json"
+    STATE_FILENAME = "state.json"
 
     def __init__(
         self,
@@ -21,6 +34,8 @@ class SlayAiNet(nn.Module):
         state_size: int,
         action_size: int,
         params: MetaParameters,
+        network_state_dict,
+        optimizer_state_dict,
     ):
         super().__init__()
         self.save_dir = save_dir
@@ -32,6 +47,8 @@ class SlayAiNet(nn.Module):
         self.learning_rate = params.LEARNING_RATE
 
         self.online = self.__build_nn(self.state_size, self.action_size)
+        if network_state_dict is not None:
+            self.online.load_state_dict(network_state_dict)
 
         self.target = self.__build_nn(self.state_size, self.action_size)
         self.target.load_state_dict(self.online.state_dict())
@@ -43,6 +60,8 @@ class SlayAiNet(nn.Module):
         self.optimizer = torch.optim.Adam(
             self.online.parameters(), lr=self.learning_rate
         )
+        if optimizer_state_dict is not None:
+            self.optimizer.load_state_dict(optimizer_state_dict)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
     def forward(self, input, model):
@@ -93,11 +112,36 @@ class SlayAiNet(nn.Module):
     def sync_Q_target(self):
         self.target.load_state_dict(self.online.state_dict())
 
+    @staticmethod
+    def load(full_save_dir: str | None):
+        if full_save_dir is None:
+            return (None, None, None, None, None)
+
+        checkpoint_path = full_save_dir / SlayAiNet.CHECKPOINT_FILENAME
+        checkpoint = torch.load(checkpoint_path)
+
+        parameters_path = full_save_dir / SlayAiNet.PARAMS_FILENAME
+        params: MetaParameters | None = None
+        with open(parameters_path, "r") as file:
+            params = MetaParameters(**json.load(file))
+
+        state_path = full_save_dir / SlayAiNet.STATE_FILENAME
+        state: TrainingState | None = None
+        with open(state_path, "r") as file:
+            state = TrainingState(**json.load(file))
+
+        return (
+            checkpoint.get("network"),
+            checkpoint.get("optimizer"),
+            checkpoint.get("memory"),
+            params,
+            state,
+        )
+
     def save(
         self,
         curr_step: int,
         save_every: int,
-        exploration_rate: int,
         memory: TensorDictReplayBuffer,
         params: MetaParameters,
         training_state: TrainingState,
@@ -105,23 +149,21 @@ class SlayAiNet(nn.Module):
         save_slice = self.save_dir / f"{int(curr_step // save_every)}"
         Path(save_slice).mkdir(parents=True, exist_ok=True)
 
-        checkpoint_path = save_slice / "slay_ai_net.chkpt"
+        checkpoint_path = save_slice / SlayAiNet.CHECKPOINT_FILENAME
         torch.save(
-            dict(model=self.online.state_dict(), exploration_rate=exploration_rate),
+            dict(
+                network=self.online.state_dict(),
+                optimizer=self.optimizer.state_dict(),
+                memory=memory.state_dict(),
+            ),
             checkpoint_path,
         )
-        logging.info(f"SlayAiNet saved to {checkpoint_path} at step {curr_step}")
+        logging.info(f"SlayAi Data saved to {checkpoint_path} at step {curr_step}")
 
-        optimizer_path = save_slice / "optimizer.pt"
-        torch.save(dict(model=self.optimizer.state_dict()), optimizer_path)
-
-        memory_path = save_slice / "memory.dat"
-        torch.save(dict(model=memory.state_dict()), memory_path)
-
-        parameters_path = save_slice / "params.json"
+        parameters_path = save_slice / SlayAiNet.PARAMS_FILENAME
         with open(parameters_path, "w") as file:
             json.dump(params.__dict__, file)
 
-        state_path = save_slice / "state.json"
+        state_path = save_slice / SlayAiNet.STATE_FILENAME
         with open(state_path, "w") as file:
             json.dump(training_state.__dict__, file)

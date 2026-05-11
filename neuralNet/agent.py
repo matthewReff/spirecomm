@@ -50,6 +50,9 @@ class SlayAiAgent:
     def __init__(
         self,
         save_dir: Path,
+        network_state_dict,
+        optimizer_state_dict,
+        memory_state_dict,
         meta_params: MetaParameters | None,
         training_state: TrainingState | None,
     ):
@@ -60,11 +63,6 @@ class SlayAiAgent:
         self.state_size = 1034
         self.action_size = 300
 
-        self.meta_params = (
-            meta_params
-            if meta_params is not None
-            else SlayAiAgent.generate_default_parameters(speedup_factor=1e1)
-        )
         self.starting_state = (
             training_state
             if training_state is not None
@@ -74,6 +72,11 @@ class SlayAiAgent:
         self.curr_episode = self.starting_state.CURRENT_EPISODE
         self.exploration_rate = self.starting_state.CURRENT_EXPLORATION_RATE
 
+        self.meta_params = (
+            meta_params
+            if meta_params is not None
+            else SlayAiAgent.generate_default_parameters(speedup_factor=1e1)
+        )
         self.exploration_rate_decay = self.meta_params.BASE_DECAY_RATE
         self.exploration_rate_min = self.meta_params.EXPLORATION_RATE_MIN
         self.max_episodes = self.meta_params.MAX_EPISODES
@@ -88,12 +91,16 @@ class SlayAiAgent:
             state_size=self.state_size,
             action_size=self.action_size,
             params=self.meta_params,
+            network_state_dict=network_state_dict,
+            optimizer_state_dict=optimizer_state_dict,
         ).float()
         self.net = self.net.to(device=self.device)
 
         self.memory = TensorDictReplayBuffer(
             storage=ListStorage(100000, device=torch.device("cpu"))
         )
+        if memory_state_dict is not None:
+            self.memory.load_state_dict(memory_state_dict)
 
     def _true_random_action(self) -> int:
         random_using_index = random.randint(0, 9)
@@ -213,7 +220,6 @@ class SlayAiAgent:
             self.net.save(
                 curr_step=self.curr_step,
                 save_every=self.save_every,
-                exploration_rate=self.exploration_rate,
                 memory=self.memory,
                 params=self.meta_params,
                 training_state=current_training_state,

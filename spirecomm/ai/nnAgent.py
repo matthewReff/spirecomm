@@ -1,3 +1,4 @@
+from neuralNet.network import SlayAiNet
 from spirecomm.spire.potion import Potion
 from spirecomm.spire.card import Card
 from spirecomm.communication.action import (
@@ -23,15 +24,23 @@ class NnAgent(Agent):
     slay_ai_agent = None
     training_logger = None
 
-    def __init__(self, chosen_class):
+    def __init__(self, chosen_class: PlayerClass, checkpoint_directory: str | None):
         save_dir = Path("checkpoints") / datetime.datetime.now().strftime(
             "%Y-%m-%dT%H-%M-%S"
         )
         save_dir.mkdir(parents=True)
         self.log_every = 10
 
+        (network_state_dict, optimizer_state_dict, memory_state_dict, params, state) = (
+            SlayAiNet.load(checkpoint_directory)
+        )
         self.slay_ai_agent = SlayAiAgent(
-            save_dir=save_dir, meta_params=None, training_state=None
+            save_dir=save_dir,
+            network_state_dict=network_state_dict,
+            optimizer_state_dict=optimizer_state_dict,
+            memory_state_dict=memory_state_dict,
+            meta_params=params,
+            training_state=state,
         )
 
         self.training_logger = MetricLogger(save_dir)

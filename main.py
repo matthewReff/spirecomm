@@ -12,7 +12,14 @@ from spirecomm.spire.character import PlayerClass
 
 def main():
     logging.basicConfig(filename="neuralNet.log", level=logging.INFO)
-    agent: Agent = NnAgent(PlayerClass.IRONCLAD)
+
+    # Add a checkpoint directory to resume training or load a trained model
+    checkpoint_directory = None
+    #checkpoint_directory = Path("checkpoints") / "2026-05-11T00-40-21/97"
+
+    agent: Agent = NnAgent(
+        chosen_class=PlayerClass.IRONCLAD, checkpoint_directory=checkpoint_directory
+    )
     coordinator = Coordinator()
     coordinator.signal_ready()
     coordinator.register_command_error_callback(agent.handle_error)
