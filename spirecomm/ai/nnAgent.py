@@ -30,7 +30,9 @@ class NnAgent(Agent):
         save_dir.mkdir(parents=True)
         self.log_every = 10
 
-        self.slay_ai_agent = SlayAiAgent(save_dir)
+        self.slay_ai_agent = SlayAiAgent(
+            save_dir=save_dir, meta_params=None, training_state=None
+        )
 
         self.training_logger = MetricLogger(save_dir)
 

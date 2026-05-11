@@ -1,9 +1,12 @@
 from pathlib import Path
 
+from neuralNet.configurationData import MetaParameters, TrainingState
 import torch
 import numpy as np
 from torch import nn
 import logging
+from torchrl.data import TensorDictReplayBuffer
+import json
 
 # https://docs.pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 
@@ -12,13 +15,21 @@ class SlayAiNet(nn.Module):
     save_dir = None
 
     def __init__(
-        self, save_dir: Path, batch_size: int, state_size: int, action_size: int
+        self,
+        save_dir: Path,
+        batch_size: int,
+        state_size: int,
+        action_size: int,
+        params: MetaParameters,
     ):
         super().__init__()
         self.save_dir = save_dir
         self.batch_size = batch_size
         self.state_size = state_size
         self.action_size = action_size
+
+        self.gamma = params.TIME_DISCOUNT_FACTOR
+        self.learning_rate = params.LEARNING_RATE
 
         self.online = self.__build_nn(self.state_size, self.action_size)
 
@@ -29,8 +40,6 @@ class SlayAiNet(nn.Module):
         for p in self.target.parameters():
             p.requires_grad = False
 
-        self.gamma = 0.99
-        self.learning_rate = 0.00025
         self.optimizer = torch.optim.Adam(
             self.online.parameters(), lr=self.learning_rate
         )
@@ -84,10 +93,34 @@ class SlayAiNet(nn.Module):
     def sync_Q_target(self):
         self.target.load_state_dict(self.online.state_dict())
 
-    def save(self, curr_step: int, save_every: int, exploration_rate: int):
-        save_path = self.save_dir / f"slay_ai_net_{int(curr_step // save_every)}.chkpt"
+    def save(
+        self,
+        curr_step: int,
+        save_every: int,
+        exploration_rate: int,
+        memory: TensorDictReplayBuffer,
+        params: MetaParameters,
+        training_state: TrainingState,
+    ):
+        save_slice = self.save_dir / f"int({curr_step // save_every})"
+
+        checkpoint_path = save_slice / "slay_ai_net.chkpt"
         torch.save(
             dict(model=self.online.state_dict(), exploration_rate=exploration_rate),
-            save_path,
+            checkpoint_path,
         )
-        logging.info(f"SlayAiNet saved to {save_path} at step {curr_step}")
+        logging.info(f"SlayAiNet saved to {checkpoint_path} at step {curr_step}")
+
+        optimizer_path = save_slice / "optimizer.pt"
+        torch.save(dict(model=self.optimizer.state_dict()), optimizer_path)
+
+        memory_path = save_slice / "memory.dat"
+        memory.dumps(memory_path)
+
+        parameters_path = save_slice / "params.json"
+        with open(parameters_path, "w") as file:
+            json.dump(params, file)
+
+        state_path = save_slice / "state.json"
+        with open(state_path, "w") as file:
+            json.dump(training_state, file)

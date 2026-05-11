@@ -1,6 +1,7 @@
 from pathlib import Path
 import random
 
+from neuralNet.configurationData import MetaParameters, TrainingState
 from neuralNet.dataConverter import ACTION_ENCODING
 from spirecomm.spire.game import Game
 from neuralNet.network import SlayAiNet
@@ -12,7 +13,46 @@ import logging
 
 
 class SlayAiAgent:
-    def __init__(self, save_dir: Path):
+    @staticmethod
+    def generate_default_parameters(speedup_factor: int) -> MetaParameters:
+        DEFAULT_EXPLORATION_RATE_MIN = 0.1
+        DEFAULT_DECAY_RATE = 0.99999975
+
+        # Given a speedup factor, reach the exploration min N times faster
+        NUMBER_OF_STEPS_TO_REACH_ORIGINAL = np.log(
+            DEFAULT_EXPLORATION_RATE_MIN
+        ) / np.log(DEFAULT_DECAY_RATE)
+        NUMBER_OF_STEPS_TO_REACH_SPED_UP = (
+            NUMBER_OF_STEPS_TO_REACH_ORIGINAL / speedup_factor
+        )
+        SCALED_DECAY_RATE = np.pow(
+            DEFAULT_EXPLORATION_RATE_MIN, 1 / NUMBER_OF_STEPS_TO_REACH_SPED_UP
+        )
+
+        return MetaParameters(
+            EXPLORATION_RATE_MIN=DEFAULT_EXPLORATION_RATE_MIN,
+            BASE_DECAY_RATE=SCALED_DECAY_RATE,
+            TIME_DISCOUNT_FACTOR=0.99,
+            LEARNING_RATE=0.00025,
+            MAX_EPISODES=999999,
+            SAVE_EVERY=5e5 // speedup_factor,
+            BURN_IN=1e4 // speedup_factor,
+            LEARN_EVERY=3,
+            SYNC_EVERY=1e4 // speedup_factor,
+        )
+
+    @staticmethod
+    def generate_staring_state() -> TrainingState:
+        return TrainingState(
+            CURRENT_STEP=0, CURRENT_EPISODE=0, CURRENT_EXPLORATION_RATE=1
+        )
+
+    def __init__(
+        self,
+        save_dir: Path,
+        meta_params: MetaParameters | None,
+        training_state: TrainingState | None,
+    ):
         # Generic Setup
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -20,47 +60,39 @@ class SlayAiAgent:
         self.state_size = 1034
         self.action_size = 300
 
+        self.meta_params = (
+            meta_params
+            if meta_params is not None
+            else SlayAiAgent.generate_default_parameters(speedup_factor=1e1)
+        )
+        self.starting_state = (
+            training_state
+            if training_state is not None
+            else SlayAiAgent.generate_staring_state()
+        )
+        self.curr_step = self.starting_state.CURRENT_STEP
+        self.curr_episode = self.starting_state.CURRENT_EPISODE
+        self.exploration_rate = self.starting_state.CURRENT_EXPLORATION_RATE
+
+        self.exploration_rate_decay = self.meta_params.BASE_DECAY_RATE
+        self.exploration_rate_min = self.meta_params.EXPLORATION_RATE_MIN
+        self.burnin = self.meta_params.BURN_IN
+        self.save_every = self.meta_params.SAVE_EVERY
+        self.sync_every = self.meta_params.SYNC_EVERY
+        self.learn_every = self.meta_params.LEARN_EVERY
+
         self.net = SlayAiNet(
             save_dir=save_dir,
             batch_size=self.batch_size,
             state_size=self.state_size,
             action_size=self.action_size,
+            params=self.meta_params,
         ).float()
         self.net = self.net.to(device=self.device)
 
-        # Exploration params
-        self.exploration_rate = 1
-        self.exploration_rate_min = 0.1
-        BASE_DECAY_RATE = 0.99999975
-        SPEEDUP_FACTOR = 1e1  # Between 1e0 and 1e4
-        # Given a speedup factor, reach the exploration min N times faster
-        NUMBER_OF_STEPS_TO_REACH_ORIGINAL = np.log(self.exploration_rate_min) / np.log(
-            BASE_DECAY_RATE
-        )
-        NUMBER_OF_STEPS_TO_REACH_SPED_UP = (
-            NUMBER_OF_STEPS_TO_REACH_ORIGINAL / SPEEDUP_FACTOR
-        )
-        DECAY_RATE = np.pow(
-            self.exploration_rate_min, 1 / NUMBER_OF_STEPS_TO_REACH_SPED_UP
-        )
-
-        self.exploration_rate_decay = DECAY_RATE
-
-        self.curr_step = 0
-        self.curr_episode = 0
-        self.max_episodes = 999999  # TODO add actual stopping after specific episode
-
-        # Memory params
-        self.save_every = 5e5 // SPEEDUP_FACTOR
         self.memory = TensorDictReplayBuffer(
             storage=ListStorage(100000, device=torch.device("cpu"))
         )
-
-        self.burnin = 1e4 // SPEEDUP_FACTOR  # min. experiences before training
-        self.learn_every = 3  # no. of experiences between updates to Q_online
-        self.sync_every = (
-            1e4 // SPEEDUP_FACTOR
-        )  # no. of experiences between Q_target & Q_online sync
 
     def _true_random_action(self) -> int:
         random_using_index = random.randint(0, 9)
@@ -171,10 +203,19 @@ class SlayAiAgent:
             self.net.sync_Q_target()
 
         if self.curr_step % self.save_every == 0:
+            current_training_state = TrainingState(
+                CURRENT_STEP=self.curr_step,
+                CURRENT_EPISODE=self.curr_episode,
+                CURRENT_EXPLORATION_RATE=self.exploration_rate,
+            )
+
             self.net.save(
                 curr_step=self.curr_step,
                 save_every=self.save_every,
                 exploration_rate=self.exploration_rate,
+                memory=self.memory,
+                params=self.meta_params,
+                state=current_training_state,
             )
 
         if self.curr_step < self.burnin:
