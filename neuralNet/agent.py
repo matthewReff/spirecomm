@@ -35,7 +35,7 @@ class SlayAiAgent:
             TIME_DISCOUNT_FACTOR=0.99,
             LEARNING_RATE=0.00025,
             MAX_EPISODES=999999,
-            SAVE_EVERY=5e5 // speedup_factor,
+            SAVE_EVERY=5e4 // speedup_factor,
             BURN_IN=1e4 // speedup_factor,
             LEARN_EVERY=3,
             SYNC_EVERY=1e4 // speedup_factor,

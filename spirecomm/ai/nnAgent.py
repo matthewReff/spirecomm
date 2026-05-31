@@ -144,15 +144,17 @@ class NnAgent(Agent):
                 actual_potion: Potion = potions[potion_index]
                 is_valid_source = actual_potion.can_use
 
-                # No required target, bypass filtering
-                if not actual_potion.requires_target and is_valid_source:
-                    targetless_potion_action = PotionAction(
-                        True, potion_index=potion_action.potion_index
+                # Handle specific edge case
+                if is_valid_source and actual_potion.name == "Smoke Bomb":
+                    smoke_bomb_potion_action = PotionAction(
+                        use=True, potion_index=potion_action.potion_index
                     )
-                    if actual_potion.name == "Smoke Bomb":
-                        return SmokeBombAction(targetless_potion_action)
-                    else:
-                        return targetless_potion_action
+                    return SmokeBombAction(smoke_bomb_potion_action)
+                elif is_valid_source and not actual_potion.requires_target:
+                    targetless_potion_action = PotionAction(
+                        use=True, potion_index=potion_action.potion_index
+                    )
+                    return targetless_potion_action
 
         is_valid_target = None
         monsters = self.game.monsters

@@ -99,6 +99,7 @@ class PotionAction(Action):
         coordinator.send_message(" ".join(arguments))
 
 
+# TODO, validate that this works as-is. Smoke bomb seems to have unique mechanics and doesn't encode correctly
 class SmokeBombAction(Action):
     """A special case potion action. Because an animation plays after casting smoke bomb, we need to prevent actions until the proceed action is available"""
 
@@ -107,10 +108,9 @@ class SmokeBombAction(Action):
         self.original_potion_action = original_potion_action
 
     def execute(self, coordinator):
+        coordinator.add_action_to_queue(self.original_potion_action)
         coordinator.add_action_to_queue(WaitAction(150))
         coordinator.add_action_to_queue(ProceedAction())
-        self.original_potion_action.execute(coordinator)
-
 
 class EndTurnAction(Action):
     """An action to end your turn"""

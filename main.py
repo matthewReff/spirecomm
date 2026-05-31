@@ -15,7 +15,7 @@ def main():
 
     # Add a checkpoint directory to resume training or load a trained model
     checkpoint_directory = None
-    #checkpoint_directory = Path("checkpoints") / "2026-05-11T00-40-21/97"
+    # checkpoint_directory = Path("checkpoints") / "{Timestamp}/{Snapshot}"
 
     agent: Agent = NnAgent(
         chosen_class=PlayerClass.IRONCLAD, checkpoint_directory=checkpoint_directory
